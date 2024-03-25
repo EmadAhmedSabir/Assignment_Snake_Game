@@ -32,27 +32,26 @@ public class StartGame {
 
             // Draw some text while paused
             if(mPaused){
-
-
-                Log.d("tag223","paused");
-
-                // Set the size and color of the mPaint for the text
-                mPaint.setColor(Color.parseColor("#000000"));
-                mPaint.setTextSize(80);
-                mPaint.setTypeface(ResourcesCompat.getFont(mContext, R.font.poppins_regular));
-
-                // Draw the message
-                // We will give this an international upgrade soon
-                //mCanvas.drawText("Tap To Play!", 200, 700, mPaint);
-                mCanvas.drawText("Tap to Play",
-                        200, 200, mPaint);
+                pauseGame(mPaint,mCanvas,mContext);
             }
-
-
 
             // Unlock the mCanvas and reveal the graphics for this frame
             mSurfaceHolder.unlockCanvasAndPost(mCanvas);
         }
+    }
+    public static void pauseGame(Paint mPaint, Canvas mCanvas, Context mContext){
+        Log.d("tag223","paused");
+
+        // Set the size and color of the mPaint for the text
+        mPaint.setColor(Color.parseColor("#000000"));
+        mPaint.setTextSize(80);
+        mPaint.setTypeface(ResourcesCompat.getFont(mContext, R.font.poppins_regular));
+
+        // Draw the message
+        // We will give this an international upgrade soon
+        //mCanvas.drawText("Tap To Play!", 200, 700, mPaint);
+        mCanvas.drawText("Tap to Play",
+                200, 200, mPaint);
     }
 
 }

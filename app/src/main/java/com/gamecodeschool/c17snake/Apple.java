@@ -10,17 +10,17 @@ import java.util.Random;
 
 class Apple {
 
-    private Point location = new Point();
-    private Point mSpawnRange;
-    private int mSize;
+    private final Point location = new Point();
+    private final Point mSpawnRange;
+    private final int mSize;
 
     private Bitmap mBitmapApple;
-
+    private static final int initialX = -10;
     Apple(Context context, Point sr, int s){
 
         mSpawnRange = sr;
         mSize = s;
-        location.x = -10;
+        location.x = initialX;
 
         mBitmapApple = BitmapFactory.decodeResource(context.getResources(), R.drawable.apple);
 

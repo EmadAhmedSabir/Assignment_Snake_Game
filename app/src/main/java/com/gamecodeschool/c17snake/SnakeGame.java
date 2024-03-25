@@ -27,28 +27,28 @@ class SnakeGame extends SurfaceView implements Runnable{
     private volatile boolean mPaused = true;
 
     // for playing sound effects
-    private SoundPool mSP;
+    private final SoundPool mSP;
     private int mEat_ID = -1;
     private int mCrashID = -1;
 
     // The size in segments of the playable area
     private final int NUM_BLOCKS_WIDE = 40;
-    private int mNumBlocksHigh;
+    private final int mNumBlocksHigh;
 
     // How many points does the player have
     private int mScore;
 
     // Objects for drawing
     private Canvas mCanvas;
-    private SurfaceHolder mSurfaceHolder;
-    private Paint mPaint;
+    private final SurfaceHolder mSurfaceHolder;
+    private final Paint mPaint;
 
     // A snake ssss
-    private Snake mSnake;
+    private final Snake mSnake;
     // And an apple
-    private Apple mApple;
+    private final Apple mApple;
 
-    private Context  mContext;
+    private final Context  mContext;
 
     TextView btnPauseOrResume;
     // This is the constructor method that gets called
@@ -138,38 +138,31 @@ class SnakeGame extends SurfaceView implements Runnable{
     }
 
     public void update() {
-
-        // Move the snake
         mSnake.move();
+        eatApple();
+        snakeDeath();
+    }
 
-        // Did the head of the snake eat the apple?
-        if(mSnake.checkDinner(mApple.getLocation())){
-            // This reminds me of Edge of Tomorrow.
-            // One day the apple will be ready!
+    private void eatApple() {
+        if (mSnake.checkDinner(mApple.getLocation())) {
             mApple.spawn();
-
-            // Add to  mScore
-            mScore = mScore + 1;
-
-            // Play a sound
+            mScore++;
             mSP.play(mEat_ID, 1, 1, 0, 0, 1);
         }
-
-        // Did the snake die?
-        if (mSnake.detectDeath()) {
-            // Pause the game ready to start again
-            mSP.play(mCrashID, 1, 1, 0, 0, 1);
-            try{
-                SnakeActivity.btnPauseOrResume.setVisibility(INVISIBLE);
-            }
-            catch (Exception e){
-
-            }
-
-            mPaused =true;
-        }
-
     }
+
+    private void snakeDeath() {
+        if (mSnake.detectDeath()) {
+            mSP.play(mCrashID, 1, 1, 0, 0, 1);
+            try {
+                SnakeActivity.btnPauseOrResume.setVisibility(INVISIBLE);
+            } catch (Exception e) {
+                // Handle the exception, if necessary
+            }
+            mPaused = true;
+        }
+    }
+
 
 
     @SuppressLint("ClickableViewAccessibility")
