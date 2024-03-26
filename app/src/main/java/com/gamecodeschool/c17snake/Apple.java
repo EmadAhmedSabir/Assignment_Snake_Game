@@ -27,11 +27,17 @@ class Apple {
         mBitmapApple = Bitmap.createScaledBitmap(mBitmapApple, s, s, false);
     }
 
-    void spawn(){
+    void spawn(double size){
         Random random = new Random();
         location.x = random.nextInt(mSpawnRange.x) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
     }
+    void spawn(int size){
+        Random random = new Random();
+        location.x = random.nextInt(mSpawnRange.x) + 1;
+        location.y = random.nextInt(mSpawnRange.y - 1) + 1;
+    }
+
 
     Point getLocation(){
         return location;

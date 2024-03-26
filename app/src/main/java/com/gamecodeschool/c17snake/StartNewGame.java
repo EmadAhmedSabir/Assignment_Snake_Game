@@ -1,9 +1,11 @@
 package com.gamecodeschool.c17snake;
 
-import static android.view.View.VISIBLE;
+//import static android.view.View.VISIBLE;
 
-import android.content.Context;
-import android.widget.TextView;
+//import android.content.Context;
+//import android.widget.TextView;
+
+import android.graphics.Color;
 
 public class StartNewGame {
 
@@ -13,10 +15,9 @@ public class StartNewGame {
 
         // reset the snake
         mSnake.reset(NUM_BLOCKS_WIDE, mNumBlocksHigh);
-
         // Get the apple ready for dinner
-        mApple.spawn();
-
+        double blockSize = 5.0;
+        mApple.spawn(blockSize);
         // Reset the mScore
         mScore = 0;
 

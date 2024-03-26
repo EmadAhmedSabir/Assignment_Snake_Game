@@ -64,6 +64,7 @@ class Snake {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
         }
         private void calculateHalfWayPoint(Point mr, int ss) {
+
             halfWayPoint = mr.x * ss / 2;
         }
         void reset(int w, int h) {

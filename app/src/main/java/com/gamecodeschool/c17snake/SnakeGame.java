@@ -35,6 +35,8 @@ class SnakeGame extends SurfaceView implements Runnable{
     private final int NUM_BLOCKS_WIDE = 40;
     private final int mNumBlocksHigh;
 
+    private final int blockSize;
+
     // How many points does the player have
     private int mScore;
 
@@ -59,9 +61,9 @@ class SnakeGame extends SurfaceView implements Runnable{
         this.mContext = context;
 
         // Work out how many pixels each block is
-        int blockSize = size.x / NUM_BLOCKS_WIDE;
+        this.blockSize = size.x / NUM_BLOCKS_WIDE;
         // How many blocks of the same size will fit into the height
-        mNumBlocksHigh = size.y / blockSize;
+        this.mNumBlocksHigh = size.y / this.blockSize;
 
         // Initialize the SoundPool
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -144,8 +146,10 @@ class SnakeGame extends SurfaceView implements Runnable{
     }
 
     private void eatApple() {
+        int blockSize = 5;
         if (mSnake.checkDinner(mApple.getLocation())) {
-            mApple.spawn();
+            //overloading with parameter
+            mApple.spawn(blockSize);
             mScore++;
             mSP.play(mEat_ID, 1, 1, 0, 0, 1);
         }
@@ -157,9 +161,9 @@ class SnakeGame extends SurfaceView implements Runnable{
             try {
                 SnakeActivity.btnPauseOrResume.setVisibility(INVISIBLE);
             } catch (Exception e) {
-                // Handle the exception, if necessary
             }
             mPaused = true;
+            mScore = 0;
         }
     }
 
