@@ -61,7 +61,7 @@ class Apple implements Drawable{
         return location;
     }
     @Override
-    void draw(Canvas canvas, Paint paint){
+    public void draw(Canvas canvas, Paint paint){
         canvas.drawBitmap(mBitmapApple,
                 location.x * mSize, location.y * mSize, paint);
 
