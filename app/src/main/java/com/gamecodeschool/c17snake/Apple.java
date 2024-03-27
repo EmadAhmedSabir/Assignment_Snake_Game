@@ -43,6 +43,9 @@ class Apple implements Drawable{
         location.x = random.nextInt(mSpawnRange.x) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
         mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, mSize, mSize, false);
+        changeColor(s);
+    }
+    void changeColor(int s){
 
         Bitmap tempBitmap = Bitmap.createBitmap(mSize, mSize, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(tempBitmap);
@@ -54,8 +57,8 @@ class Apple implements Drawable{
         canvas.drawBitmap(mBitmapApple, 0, 0, paint);
 
         mBitmapApple = tempBitmap;
-    }
 
+    }
 
     Point getLocation(){
         return location;
