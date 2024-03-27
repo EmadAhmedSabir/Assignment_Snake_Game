@@ -16,8 +16,7 @@ public class StartNewGame {
         // reset the snake
         mSnake.reset(NUM_BLOCKS_WIDE, mNumBlocksHigh);
         // Get the apple ready for dinner
-        double blockSize = 5.0;
-        mApple.spawn(blockSize);
+        mApple.spawn();
         // Reset the mScore
         mScore = 0;
 

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.media.AudioAttributes;
@@ -146,10 +147,10 @@ class SnakeGame extends SurfaceView implements Runnable{
     }
 
     private void eatApple() {
-        int blockSize = 5;
+        int newColor = Color.BLUE;
         if (mSnake.checkDinner(mApple.getLocation())) {
             //overloading with parameter
-            mApple.spawn(blockSize);
+            mApple.spawn(newColor);
             mScore++;
             mSP.play(mEat_ID, 1, 1, 0, 0, 1);
         }

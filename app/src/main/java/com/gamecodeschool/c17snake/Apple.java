@@ -7,35 +7,53 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import java.util.Random;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.Color;
 
 class Apple {
 
     private final Point location = new Point();
     private final Point mSpawnRange;
-    private final int mSize;
+    private int mSize;
+
+    private Bitmap mOriginalBitmap;
 
     private Bitmap mBitmapApple;
-    private static final int initialX = -10;
-    Apple(Context context, Point sr, int s){
 
+    private final Context context;
+    private static final int initialX = -10;
+    public Apple(Context context, Point sr, int s) {
+        this.context = context;
         mSpawnRange = sr;
         mSize = s;
         location.x = initialX;
 
-        mBitmapApple = BitmapFactory.decodeResource(context.getResources(), R.drawable.apple);
-
-        mBitmapApple = Bitmap.createScaledBitmap(mBitmapApple, s, s, false);
+        mOriginalBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.apple);
+        mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, s, s, false);
     }
 
-    void spawn(double size){
+    void spawn(){
         Random random = new Random();
         location.x = random.nextInt(mSpawnRange.x) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
     }
-    void spawn(int size){
+    void spawn(int s){
         Random random = new Random();
         location.x = random.nextInt(mSpawnRange.x) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
+        mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, mSize, mSize, false);
+
+        Bitmap tempBitmap = Bitmap.createBitmap(mSize, mSize, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(tempBitmap);
+        Paint paint = new Paint();
+        int newColor = s;
+        PorterDuffColorFilter colorFilter = new PorterDuffColorFilter(newColor, PorterDuff.Mode.SRC_ATOP);
+        paint.setColorFilter(colorFilter);
+
+        canvas.drawBitmap(mBitmapApple, 0, 0, paint);
+
+        mBitmapApple = tempBitmap;
     }
 
 
