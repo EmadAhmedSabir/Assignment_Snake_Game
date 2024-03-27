@@ -11,7 +11,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Color;
 
-class Apple {
+class Apple implements Drawable{
 
     private final Point location = new Point();
     private final Point mSpawnRange;
@@ -60,7 +60,7 @@ class Apple {
     Point getLocation(){
         return location;
     }
-
+    @Override
     void draw(Canvas canvas, Paint paint){
         canvas.drawBitmap(mBitmapApple,
                 location.x * mSize, location.y * mSize, paint);
