@@ -18,6 +18,7 @@ public class StartNewGame {
         // Get the apple ready for dinner
         mApple.spawn();
         // Reset the mScore
+
         mScore = 0;
 
 

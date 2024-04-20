@@ -10,7 +10,7 @@ import android.view.SurfaceHolder;
 import androidx.core.content.res.ResourcesCompat;
 
 public class StartGame {
-    public static void draw(SurfaceHolder mSurfaceHolder, Canvas mCanvas, int mScore, Paint mPaint, Apple mApple, Snake mSnake, boolean mPaused, Context mContext) {
+    public static void draw(SurfaceHolder mSurfaceHolder, Canvas mCanvas, int mHighScore, int mScore, Paint mPaint, Apple mApple, Snake mSnake, boolean mPaused, Context mContext) {
         // Get a lock on the mCanvas
         if (mSurfaceHolder.getSurface().isValid()) {
             mCanvas = mSurfaceHolder.lockCanvas();
@@ -24,7 +24,7 @@ public class StartGame {
             mPaint.setTextSize(80);
 
             // Draw the score
-            mCanvas.drawText("" + mScore, 70, 80, mPaint);
+            mCanvas.drawText("High Score " + mHighScore + " Score:" + mScore, 70, 80, mPaint);
 
             // Draw the apple and the snake
             mApple.draw(mCanvas, mPaint);

@@ -40,6 +40,7 @@ class SnakeGame extends SurfaceView implements Runnable{
 
     // How many points does the player have
     private int mScore;
+    private int mHighScore;
 
     // Objects for drawing
     private Canvas mCanvas;
@@ -121,7 +122,7 @@ class SnakeGame extends SurfaceView implements Runnable{
                 }
             }
 
-            StartGame.draw(mSurfaceHolder,mCanvas,mScore,mPaint,mApple,mSnake,mPaused,mContext);
+            StartGame.draw(mSurfaceHolder,mCanvas,mHighScore,mScore,mPaint,mApple,mSnake,mPaused,mContext);
         }
     }
 
@@ -152,6 +153,9 @@ class SnakeGame extends SurfaceView implements Runnable{
             //overloading with parameter
             mApple.spawn(newColor);
             mScore++;
+            if(mHighScore < mScore){
+               mHighScore = mScore;
+            }
             mSP.play(mEat_ID, 1, 1, 0, 0, 1);
         }
     }
