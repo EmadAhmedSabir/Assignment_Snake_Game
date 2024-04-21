@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -29,12 +30,13 @@ class Snake implements Drawable, Movable {
     private Bitmap mBitmapBody;
 
     Snake(Context context, Point mr, int ss) {
-
         segmentLocations = new ArrayList<>();
-
         mSegmentSize = ss;
         mMoveRange = mr;
+
+        // Load the head bitmap
         Bitmap mBitmapHead = BitmapFactory.decodeResource(context.getResources(), R.drawable.head);
+        // Change head color to yellow
         headBitmaps(mBitmapHead, ss);
         bodyBitmap(context, ss);
         calculateHalfWayPoint(mr, ss);
@@ -47,15 +49,34 @@ class Snake implements Drawable, Movable {
     }
 
     private void headBitmaps(Bitmap mBitmapHead, int ss) {
-        mBitmapHeadRight = Bitmap.createScaledBitmap(mBitmapHead, ss, ss, false);
+        // Create a circular bitmap with a yellow color for the head
+        Bitmap mBitmapHeadYellow = Bitmap.createBitmap(ss, ss, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(mBitmapHeadYellow);
+        Paint paint = new Paint();
+        paint.setColor(Color.YELLOW);
+        canvas.drawCircle(ss / 2f, ss / 2f, ss / 2f, paint);
+
+        // Apply the head bitmap on the circular mask
+        Bitmap finalBitmap = Bitmap.createBitmap(ss, ss, Bitmap.Config.ARGB_8888);
+        Canvas finalCanvas = new Canvas(finalBitmap);
+        paint.setXfermode(new android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN));
+        finalCanvas.drawBitmap(mBitmapHead, 0, 0, null);
+        finalCanvas.drawBitmap(mBitmapHeadYellow, 0, 0, paint);
+
+        // Rotate the head bitmaps as needed
+        mBitmapHeadRight = finalBitmap;
         mBitmapHeadLeft = BitmapHorizontally(mBitmapHeadRight);
         mBitmapHeadUp = rotateBitmap(mBitmapHeadRight, -90);
         mBitmapHeadDown = rotateBitmap(mBitmapHeadRight, 180);
     }
 
     private void bodyBitmap(Context context, int ss) {
-        mBitmapBody = BitmapFactory.decodeResource(context.getResources(), R.drawable.body);
-        mBitmapBody = Bitmap.createScaledBitmap(mBitmapBody, ss, ss, false);
+        // Create a circular bitmap with a yellow color for the body
+        mBitmapBody = Bitmap.createBitmap(ss, ss, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(mBitmapBody);
+        Paint paint = new Paint();
+        paint.setColor(Color.YELLOW);
+        canvas.drawCircle(ss / 2f, ss / 2f, ss / 2f, paint);
     }
 
     private Bitmap BitmapHorizontally(Bitmap bitmap) {
@@ -69,11 +90,8 @@ class Snake implements Drawable, Movable {
     }
 
     void reset(int w, int h) {
-
         heading = Heading.RIGHT;
-
         segmentLocations.clear();
-
         segmentLocations.add(new Point(w / 2, h / 2));
     }
 
@@ -99,6 +117,7 @@ class Snake implements Drawable, Movable {
             drawingHead(canvas, paint, headBitmap, 0);
 
             for (int i = 1; i < segmentLocations.size(); i++) {
+                // Draw the circular yellow body bitmap
                 canvas.drawBitmap(mBitmapBody,
                         segmentLocations.get(i).x * mSegmentSize,
                         segmentLocations.get(i).y * mSegmentSize, paint);
