@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.view.MotionEvent;
@@ -35,7 +36,7 @@ class SnakeGame extends SurfaceView implements Runnable{
     // The size in segments of the playable area
     private final int NUM_BLOCKS_WIDE = 15;
     private final int mNumBlocksHigh;
-
+    private int speed = 30;
     private final int blockSize;
 
     // How many points does the player have
@@ -47,14 +48,15 @@ class SnakeGame extends SurfaceView implements Runnable{
     private final SurfaceHolder mSurfaceHolder;
     private final Paint mPaint;
 
-    // A snake ssss
+    // Game objects
     private final Snake mSnake;
-    // And an apple
     private final Apple mApple;
+    private final Ghost mGhost;
 
-    private final Context  mContext;
+    private final Context mContext;
 
     TextView btnPauseOrResume;
+
     // This is the constructor method that gets called
     // from SnakeActivity
     public SnakeGame(Context context, Point size) {
@@ -96,7 +98,7 @@ class SnakeGame extends SurfaceView implements Runnable{
         mSurfaceHolder = getHolder();
         mPaint = new Paint();
 
-        // Call the constructors of our two game objects
+        // Initialize game objects
         mApple = new Apple(context,
                 new Point(NUM_BLOCKS_WIDE,
                         mNumBlocksHigh),
@@ -107,6 +109,8 @@ class SnakeGame extends SurfaceView implements Runnable{
                         mNumBlocksHigh),
                 blockSize);
 
+        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y));
+
     }
 
     boolean playOrNot = false;
@@ -115,25 +119,23 @@ class SnakeGame extends SurfaceView implements Runnable{
     @Override
     public void run() {
         while (mPlaying) {
-            if(!mPaused) {
+            if (!mPaused) {
                 // Update 10 times a second
                 if (updateRequired()) {
                     update();
                 }
             }
 
-            StartGame.draw(mSurfaceHolder,mCanvas,mHighScore,mScore,mPaint,mApple,mSnake,mPaused,mContext);
+            draw();
         }
     }
 
-
-
-    public  boolean updateRequired() {
+    public boolean updateRequired() {
         final long TARGET_FPS = 10;
         final long MILLIS_PER_SECOND = 1000;
 
-        if(mNextFrameTime <= System.currentTimeMillis()){
-            mNextFrameTime =System.currentTimeMillis()
+        if (mNextFrameTime <= System.currentTimeMillis()) {
+            mNextFrameTime = System.currentTimeMillis()
                     + MILLIS_PER_SECOND / TARGET_FPS;
             return true;
         }
@@ -145,23 +147,24 @@ class SnakeGame extends SurfaceView implements Runnable{
         mSnake.move();
         eatApple();
         snakeDeath();
+        mGhost.update();
     }
 
     private void eatApple() {
         int newColor = Color.BLUE;
         if (mSnake.checkDinner(mApple.getLocation())) {
-            //overloading with parameter
+            // Overloading with parameter
             mApple.spawn(newColor);
             mScore++;
-            if(mHighScore < mScore){
-               mHighScore = mScore;
+            if (mHighScore < mScore) {
+                mHighScore = mScore;
             }
             mSP.play(mEat_ID, 1, 1, 0, 0, 1);
         }
     }
 
     private void snakeDeath() {
-        if (mSnake.detectDeath()) {
+        if (mSnake.detectDeath() || mGhost.getBounds().intersect(mSnake.getHeadBounds())) {
             mSP.play(mCrashID, 1, 1, 0, 0, 1);
             try {
                 SnakeActivity.btnPauseOrResume.setVisibility(INVISIBLE);
@@ -172,8 +175,6 @@ class SnakeGame extends SurfaceView implements Runnable{
         }
     }
 
-
-
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
@@ -181,12 +182,12 @@ class SnakeGame extends SurfaceView implements Runnable{
             if (mPaused) {
                 mPaused = false;
 
-                com.gamecodeschool.c17snake.StartNewGame.newGame(mSnake,mScore,playOrNot,NUM_BLOCKS_WIDE,mNumBlocksHigh,mApple,mNextFrameTime);
+                StartNewGame.newGame(mSnake, mScore, playOrNot, NUM_BLOCKS_WIDE, mNumBlocksHigh, mApple, mNextFrameTime);
                 btnPauseOrResume = SnakeActivity.btnPauseOrResume;
 
                 btnPauseOrResume.setVisibility(VISIBLE);
 
-                btnPauseOrResume.setOnClickListener(v-> {
+                btnPauseOrResume.setOnClickListener(v -> {
                     playOrNot = !playOrNot;
                     if (playOrNot) {
                         pause();
@@ -200,13 +201,29 @@ class SnakeGame extends SurfaceView implements Runnable{
                 return true;
             }
 
-
             // Let the Snake class handle the input
             mSnake.switchHeading(motionEvent);
         }
         return true;
     }
 
+    // Draw the game objects on the canvas
+    private void draw() {
+        if (mSurfaceHolder.getSurface().isValid()) {
+            mCanvas = mSurfaceHolder.lockCanvas();
+
+            // Fill the screen with a color
+            mCanvas.drawColor(Color.parseColor("#f3953d"));
+
+            // Draw the apple, snake, and ghost
+            mApple.draw(mCanvas, mPaint);
+            mSnake.draw(mCanvas, mPaint);
+            mGhost.draw(mCanvas);
+
+            // Unlock the canvas and reveal the graphics for this frame
+            mSurfaceHolder.unlockCanvasAndPost(mCanvas);
+        }
+    }
 
     // Stop the thread
     public void pause() {
@@ -217,7 +234,6 @@ class SnakeGame extends SurfaceView implements Runnable{
             // Error
         }
     }
-
 
     // Start the thread
     public void resume() {

@@ -1,5 +1,4 @@
 package com.gamecodeschool.c17snake;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
@@ -15,31 +15,31 @@ import java.util.ArrayList;
 class Snake implements Drawable, Movable {
 
     private final ArrayList<Point> segmentLocations;
-    private final int mSegmentSize;
-    private final Point mMoveRange;
+    private final int segmentSize;
+    private final Point moveRange;
     private int halfWayPoint;
     private enum Heading {
         UP, RIGHT, DOWN, LEFT
     }
 
     private Heading heading = Heading.RIGHT;
-    private Bitmap mBitmapHeadRight;
-    private Bitmap mBitmapHeadLeft;
-    private Bitmap mBitmapHeadUp;
-    private Bitmap mBitmapHeadDown;
-    private Bitmap mBitmapBody;
+    private Bitmap headBitmapRight;
+    private Bitmap headBitmapLeft;
+    private Bitmap headBitmapUp;
+    private Bitmap headBitmapDown;
+    private Bitmap bodyBitmap;
 
-    Snake(Context context, Point mr, int ss) {
+    Snake(Context context, Point moveRange, int segmentSize) {
         segmentLocations = new ArrayList<>();
-        mSegmentSize = ss;
-        mMoveRange = mr;
+        this.segmentSize = segmentSize;
+        this.moveRange = moveRange;
 
         // Load the head bitmap
-        Bitmap mBitmapHead = BitmapFactory.decodeResource(context.getResources(), R.drawable.head);
+        Bitmap headBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.head);
         // Change head color to yellow
-        headBitmaps(mBitmapHead, ss);
-        bodyBitmap(context, ss);
-        calculateHalfWayPoint(mr, ss);
+        headBitmaps(headBitmap, segmentSize);
+        bodyBitmap(context, segmentSize);
+        calculateHalfWayPoint(moveRange, segmentSize);
     }
 
     private Bitmap rotateBitmap(Bitmap bitmap, float degrees) {
@@ -48,88 +48,88 @@ class Snake implements Drawable, Movable {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    private void headBitmaps(Bitmap mBitmapHead, int ss) {
+    private void headBitmaps(Bitmap headBitmap, int segmentSize) {
         // Create a circular bitmap with a yellow color for the head
-        Bitmap mBitmapHeadYellow = Bitmap.createBitmap(ss, ss, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(mBitmapHeadYellow);
+        Bitmap headBitmapYellow = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(headBitmapYellow);
         Paint paint = new Paint();
         paint.setColor(Color.YELLOW);
-        canvas.drawCircle(ss / 2f, ss / 2f, ss / 2f, paint);
+        canvas.drawCircle(segmentSize / 2f, segmentSize / 2f, segmentSize / 2f, paint);
 
         // Apply the head bitmap on the circular mask
-        Bitmap finalBitmap = Bitmap.createBitmap(ss, ss, Bitmap.Config.ARGB_8888);
+        Bitmap finalBitmap = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
         Canvas finalCanvas = new Canvas(finalBitmap);
         paint.setXfermode(new android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN));
-        finalCanvas.drawBitmap(mBitmapHead, 0, 0, null);
-        finalCanvas.drawBitmap(mBitmapHeadYellow, 0, 0, paint);
+        finalCanvas.drawBitmap(headBitmap, 0, 0, null);
+        finalCanvas.drawBitmap(headBitmapYellow, 0, 0, paint);
 
         // Rotate the head bitmaps as needed
-        mBitmapHeadRight = finalBitmap;
-        mBitmapHeadLeft = BitmapHorizontally(mBitmapHeadRight);
-        mBitmapHeadUp = rotateBitmap(mBitmapHeadRight, -90);
-        mBitmapHeadDown = rotateBitmap(mBitmapHeadRight, 180);
+        headBitmapRight = finalBitmap;
+        headBitmapLeft = flipBitmap(headBitmapRight);
+        headBitmapUp = rotateBitmap(headBitmapRight, -90);
+        headBitmapDown = rotateBitmap(headBitmapRight, 180);
     }
 
-    private void bodyBitmap(Context context, int ss) {
+    private void bodyBitmap(Context context, int segmentSize) {
         // Create a circular bitmap with a yellow color for the body
-        mBitmapBody = Bitmap.createBitmap(ss, ss, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(mBitmapBody);
+        bodyBitmap = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bodyBitmap);
         Paint paint = new Paint();
         paint.setColor(Color.YELLOW);
-        canvas.drawCircle(ss / 2f, ss / 2f, ss / 2f, paint);
+        canvas.drawCircle(segmentSize / 2f, segmentSize / 2f, segmentSize / 2f, paint);
     }
 
-    private Bitmap BitmapHorizontally(Bitmap bitmap) {
+    private Bitmap flipBitmap(Bitmap bitmap) {
         Matrix matrix = new Matrix();
         matrix.preScale(-1, 1);
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    private void calculateHalfWayPoint(Point mr, int ss) {
-        halfWayPoint = mr.x * ss / 2;
+    private void calculateHalfWayPoint(Point moveRange, int segmentSize) {
+        halfWayPoint = moveRange.x * segmentSize / 2;
     }
 
-    void reset(int w, int h) {
+    void reset(int width, int height) {
         heading = Heading.RIGHT;
         segmentLocations.clear();
-        segmentLocations.add(new Point(w / 2, h / 2));
+        segmentLocations.add(new Point(width / 2, height / 2));
     }
 
     @Override
     public void draw(Canvas canvas, Paint paint) {
         if (!segmentLocations.isEmpty()) {
-            Bitmap headBitmap = mBitmapHeadRight;
+            Bitmap headBitmap = headBitmapRight;
             switch (heading) {
                 case RIGHT:
-                    headBitmap = mBitmapHeadRight;
+                    headBitmap = headBitmapRight;
                     break;
                 case LEFT:
-                    headBitmap = mBitmapHeadLeft;
+                    headBitmap = headBitmapLeft;
                     break;
                 case UP:
-                    headBitmap = mBitmapHeadUp;
+                    headBitmap = headBitmapUp;
                     break;
                 case DOWN:
-                    headBitmap = mBitmapHeadDown;
+                    headBitmap = headBitmapDown;
                     break;
             }
 
-            drawingHead(canvas, paint, headBitmap, 0);
+            drawHead(canvas, paint, headBitmap, 0);
 
             for (int i = 1; i < segmentLocations.size(); i++) {
                 // Draw the circular yellow body bitmap
-                canvas.drawBitmap(mBitmapBody,
-                        segmentLocations.get(i).x * mSegmentSize,
-                        segmentLocations.get(i).y * mSegmentSize, paint);
+                canvas.drawBitmap(bodyBitmap,
+                        segmentLocations.get(i).x * segmentSize,
+                        segmentLocations.get(i).y * segmentSize, paint);
             }
         }
     }
 
-    private void drawingHead(Canvas canvas, Paint paint, Bitmap bitmap, int segmentIndex) {
+    private void drawHead(Canvas canvas, Paint paint, Bitmap bitmap, int segmentIndex) {
         if (segmentIndex < segmentLocations.size()) {
             Point segment = segmentLocations.get(segmentIndex);
-            int x = segment.x * mSegmentSize;
-            int y = segment.y * mSegmentSize;
+            int x = segment.x * segmentSize;
+            int y = segment.y * segmentSize;
             canvas.drawBitmap(bitmap, x, y, paint);
         }
     }
@@ -158,8 +158,8 @@ class Snake implements Drawable, Movable {
     }
 
     boolean detectDeath() {
-        if (segmentLocations.get(0).x == -1 || segmentLocations.get(0).x > mMoveRange.x ||
-                segmentLocations.get(0).y == -1 || segmentLocations.get(0).y > mMoveRange.y) {
+        if (segmentLocations.get(0).x == -1 || segmentLocations.get(0).x > moveRange.x ||
+                segmentLocations.get(0).y == -1 || segmentLocations.get(0).y > moveRange.y) {
             return true;
         }
 
@@ -172,9 +172,8 @@ class Snake implements Drawable, Movable {
         return false;
     }
 
-    boolean checkDinner(Point l) {
-        if (segmentLocations.get(0).x == l.x &&
-                segmentLocations.get(0).y == l.y) {
+    boolean checkDinner(Point location) {
+        if (segmentLocations.get(0).equals(location)) {
             segmentLocations.add(new Point(-10, -10));
             return true;
         }
@@ -221,5 +220,14 @@ class Snake implements Drawable, Movable {
                 heading = Heading.UP;
                 break;
         }
+    }
+
+    Rect getHeadBounds() {
+        // Calculate the bounds of the snake's head based on its position
+        int left = segmentLocations.get(0).x * segmentSize;
+        int top = segmentLocations.get(0).y * segmentSize;
+        int right = left + segmentSize;
+        int bottom = top + segmentSize;
+        return new Rect(left, top, right, bottom);
     }
 }
