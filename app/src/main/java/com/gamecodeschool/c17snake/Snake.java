@@ -158,8 +158,8 @@ class Snake implements Drawable, Movable {
     }
 
     boolean detectDeath() {
-        if (segmentLocations.get(0).x == -1 || segmentLocations.get(0).x > moveRange.x ||
-                segmentLocations.get(0).y == -1 || segmentLocations.get(0).y > moveRange.y) {
+        if (segmentLocations.get(0).x < 0 || segmentLocations.get(0).x >= moveRange.x ||
+                segmentLocations.get(0).y < 0 || segmentLocations.get(0).y >= moveRange.y) {
             return true;
         }
 

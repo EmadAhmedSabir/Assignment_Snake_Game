@@ -35,12 +35,12 @@ class Apple implements Drawable{
 
     void spawn(){
         Random random = new Random();
-        location.x = random.nextInt(mSpawnRange.x) + 1;
+        location.x = random.nextInt(mSpawnRange.x - 1) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
     }
     void spawn(int s){
         Random random = new Random();
-        location.x = random.nextInt(mSpawnRange.x) + 1;
+        location.x = random.nextInt(mSpawnRange.x - 1) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
         mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, mSize, mSize, false);
         changeColor(s);

@@ -4,8 +4,11 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -18,7 +21,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 
-class SnakeGame extends SurfaceView implements Runnable{
+class SnakeGame extends SurfaceView implements Runnable {
 
     // Objects for the game loop/thread
     private static Thread mThread = null;
@@ -57,8 +60,9 @@ class SnakeGame extends SurfaceView implements Runnable{
 
     TextView btnPauseOrResume;
 
-    // This is the constructor method that gets called
-    // from SnakeActivity
+    // Background image
+    private Bitmap mBackgroundBitmap;
+
     public SnakeGame(Context context, Point size) {
         super(context);
 
@@ -68,6 +72,13 @@ class SnakeGame extends SurfaceView implements Runnable{
         this.blockSize = size.x / NUM_BLOCKS_WIDE;
         // How many blocks of the same size will fit into the height
         this.mNumBlocksHigh = size.y / this.blockSize;
+
+        // Adjust the game area to be slightly smaller than the actual size of the game area
+        int adjustedLeft = (int)(NUM_BLOCKS_WIDE * 0.10);
+        int adjustedTop = (int)(mNumBlocksHigh * 0.17);
+        int adjustedRight = (int)(NUM_BLOCKS_WIDE * 0.945);
+        int adjustedBottom = (int)(mNumBlocksHigh * 0.95);
+        Point adjustedMoveRange = new Point(adjustedRight - adjustedLeft, adjustedBottom - adjustedTop);
 
         // Initialize the SoundPool
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -100,18 +111,46 @@ class SnakeGame extends SurfaceView implements Runnable{
 
         // Initialize game objects
         mApple = new Apple(context,
-                new Point(NUM_BLOCKS_WIDE,
-                        mNumBlocksHigh),
+                adjustedMoveRange,
                 blockSize);
 
         mSnake = new Snake(context,
-                new Point(NUM_BLOCKS_WIDE,
-                        mNumBlocksHigh),
+                adjustedMoveRange,
                 blockSize);
 
         mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y));
 
+        // Load the background image
+        try {
+            Bitmap originalBitmap = BitmapFactory.decodeStream(context.getAssets().open("background.png"));
+            mBackgroundBitmap = getScaledBitmap(originalBitmap, size.x, size.y);
+        } catch (IOException e) {
+            // Handle the exception
+            e.printStackTrace();
+        }
     }
+
+    private Bitmap getScaledBitmap(Bitmap originalBitmap, int newWidth, int newHeight) {
+        float originalAspectRatio = (float) originalBitmap.getWidth() / originalBitmap.getHeight();
+        float newAspectRatio = (float) newWidth / newHeight;
+
+        int scaledWidth, scaledHeight;
+
+        if (newAspectRatio > originalAspectRatio) {
+            // Stretch the image to fit the height of the game area
+            scaledHeight = newHeight;
+            scaledWidth = (int) (newHeight * originalAspectRatio);
+        } else {
+            // Stretch the image to fit the width of the game area
+            scaledWidth = newWidth;
+            scaledHeight = (int) (newWidth / originalAspectRatio);
+            // Adjust the scaledHeight to be slightly smaller
+            scaledHeight = (int) (scaledHeight * 0.95); // Adjust this value to your preference
+        }
+
+        return Bitmap.createScaledBitmap(originalBitmap, scaledWidth, scaledHeight, true);
+    }
+
 
     boolean playOrNot = false;
 
@@ -212,8 +251,8 @@ class SnakeGame extends SurfaceView implements Runnable{
         if (mSurfaceHolder.getSurface().isValid()) {
             mCanvas = mSurfaceHolder.lockCanvas();
 
-            // Fill the screen with a color
-            mCanvas.drawColor(Color.parseColor("#f3953d"));
+            // Draw the background
+            drawBackground(mCanvas);
 
             // Draw the apple, snake, and ghost
             mApple.draw(mCanvas, mPaint);
@@ -223,6 +262,11 @@ class SnakeGame extends SurfaceView implements Runnable{
             // Unlock the canvas and reveal the graphics for this frame
             mSurfaceHolder.unlockCanvasAndPost(mCanvas);
         }
+    }
+
+    private void drawBackground(Canvas canvas) {
+        // Draw the background image
+        canvas.drawBitmap(mBackgroundBitmap, 0, 0, null);
     }
 
     // Stop the thread
