@@ -1,0 +1,856 @@
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\Apple.java
+
+package com.gamecodeschool.c17snake;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Point;
+import java.util.Random;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.Color;
+
+class Apple implements Drawable{
+
+    private final Point location = new Point();
+    private final Point mSpawnRange;
+    private int mSize;
+
+    private Bitmap mOriginalBitmap;
+
+    private Bitmap mBitmapApple;
+
+    private final Context context;
+    private static final int initialX = -10;
+    public Apple(Context context, Point sr, int s) {
+        this.context = context;
+        mSpawnRange = sr;
+        mSize = s;
+        location.x = initialX;
+
+        mOriginalBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.apple);
+        mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, s, s, false);
+    }
+
+    void spawn(){
+        Random random = new Random();
+        location.x = random.nextInt(mSpawnRange.x - 1) + 1;
+        location.y = random.nextInt(mSpawnRange.y - 1) + 1;
+    }
+    void spawn(int s){
+        Random random = new Random();
+        location.x = random.nextInt(mSpawnRange.x - 1) + 1;
+        location.y = random.nextInt(mSpawnRange.y - 1) + 1;
+        mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, mSize, mSize, false);
+        changeColor(s);
+    }
+    void changeColor(int s){
+
+        Bitmap tempBitmap = Bitmap.createBitmap(mSize, mSize, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(tempBitmap);
+        Paint paint = new Paint();
+        int newColor = s;
+        PorterDuffColorFilter colorFilter = new PorterDuffColorFilter(newColor, PorterDuff.Mode.SRC_ATOP);
+        paint.setColorFilter(colorFilter);
+
+        canvas.drawBitmap(mBitmapApple, 0, 0, paint);
+
+        mBitmapApple = tempBitmap;
+
+    }
+
+    Point getLocation(){
+        return location;
+    }
+    @Override
+    public void draw(Canvas canvas, Paint paint){
+        canvas.drawBitmap(mBitmapApple,
+                location.x * mSize, location.y * mSize, paint);
+
+    }
+
+}
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\Drawable.java
+
+package com.gamecodeschool.c17snake;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+
+interface Drawable {
+    void draw(Canvas canvas, Paint paint);
+}
+
+
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\Ghost.java
+
+
+package com.gamecodeschool.c17snake;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Point;
+import java.util.Random;
+import android.graphics.Rect;
+
+
+public class Ghost {
+
+    private final int SIZE;
+    private final int SPEED;
+    private final Point position;
+    private final Random random;
+    private final Rect bounds;
+    private final Paint paint;
+
+    public Ghost(Context context, int size, int speed, Rect gameBounds) {
+        SIZE = size;
+        SPEED = speed;
+        bounds = gameBounds;
+        position = new Point();
+        paint = new Paint();
+        paint.setColor(Color.RED);
+        random = new Random();
+        resetPosition();
+    }
+
+    public void draw(Canvas canvas) {
+        canvas.drawRect(position.x, position.y, position.x + SIZE, position.y + SIZE, paint);
+    }
+
+    public void update() {
+        move();
+        checkBoundaries();
+    }
+
+    private void move() {
+        int dx = random.nextInt(3) - 1;
+        int dy = random.nextInt(3) - 1;
+
+        position.x += dx * SPEED;
+        position.y += dy * SPEED;
+    }
+
+    private void checkBoundaries() {
+        if (position.x < bounds.left) {
+            position.x = bounds.left;
+        } else if (position.x + SIZE > bounds.right) {
+            position.x = bounds.right - SIZE;
+        }
+
+        if (position.y < bounds.top) {
+            position.y = bounds.top;
+        } else if (position.y + SIZE > bounds.bottom) {
+            position.y = bounds.bottom - SIZE;
+        }
+    }
+
+    public Rect getBounds() {
+        return new Rect(position.x, position.y, position.x + SIZE, position.y + SIZE);
+    }
+
+    public Point getPosition() {
+        return position;
+    }
+
+    public void resetPosition() {
+        position.x = random.nextInt(bounds.right - SIZE);
+        position.y = random.nextInt(bounds.bottom - SIZE);
+    }
+}
+
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\Movable.java
+
+package com.gamecodeschool.c17snake;
+
+interface Movable {
+    void move();
+}
+
+
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\Snake.java
+
+package com.gamecodeschool.c17snake;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.view.MotionEvent;
+
+import java.util.ArrayList;
+
+class Snake implements Drawable, Movable {
+
+    private final ArrayList<Point> segmentLocations;
+    private final int segmentSize;
+    private final Point moveRange;
+    private int halfWayPoint;
+    private enum Heading {
+        UP, RIGHT, DOWN, LEFT
+    }
+
+    private Heading heading = Heading.RIGHT;
+    private Bitmap headBitmapRight;
+    private Bitmap headBitmapLeft;
+    private Bitmap headBitmapUp;
+    private Bitmap headBitmapDown;
+    private Bitmap bodyBitmap;
+
+    Snake(Context context, Point moveRange, int segmentSize) {
+        segmentLocations = new ArrayList<>();
+        this.segmentSize = segmentSize;
+        this.moveRange = moveRange;
+
+        // Load the head bitmap
+        Bitmap headBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.head);
+        // Change head color to yellow
+        headBitmaps(headBitmap, segmentSize);
+        bodyBitmap(context, segmentSize);
+        calculateHalfWayPoint(moveRange, segmentSize);
+    }
+
+    private Bitmap rotateBitmap(Bitmap bitmap, float degrees) {
+        Matrix matrix = new Matrix();
+        matrix.preRotate(degrees);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
+    private void headBitmaps(Bitmap headBitmap, int segmentSize) {
+        // Create a circular bitmap with a yellow color for the head
+        Bitmap headBitmapYellow = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(headBitmapYellow);
+        Paint paint = new Paint();
+        paint.setColor(Color.YELLOW);
+        canvas.drawCircle(segmentSize / 2f, segmentSize / 2f, segmentSize / 2f, paint);
+
+        // Apply the head bitmap on the circular mask
+        Bitmap finalBitmap = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
+        Canvas finalCanvas = new Canvas(finalBitmap);
+        paint.setXfermode(new android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN));
+        finalCanvas.drawBitmap(headBitmap, 0, 0, null);
+        finalCanvas.drawBitmap(headBitmapYellow, 0, 0, paint);
+
+        // Rotate the head bitmaps as needed
+        headBitmapRight = finalBitmap;
+        headBitmapLeft = flipBitmap(headBitmapRight);
+        headBitmapUp = rotateBitmap(headBitmapRight, -90);
+        headBitmapDown = rotateBitmap(headBitmapRight, 180);
+    }
+
+    private void bodyBitmap(Context context, int segmentSize) {
+        // Create a circular bitmap with a yellow color for the body
+        bodyBitmap = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bodyBitmap);
+        Paint paint = new Paint();
+        paint.setColor(Color.YELLOW);
+        canvas.drawCircle(segmentSize / 2f, segmentSize / 2f, segmentSize / 2f, paint);
+    }
+
+    private Bitmap flipBitmap(Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        matrix.preScale(-1, 1);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
+    private void calculateHalfWayPoint(Point moveRange, int segmentSize) {
+        halfWayPoint = moveRange.x * segmentSize / 2;
+    }
+
+    void reset(int width, int height) {
+        heading = Heading.RIGHT;
+        segmentLocations.clear();
+        segmentLocations.add(new Point(width / 2, height / 2));
+    }
+
+    @Override
+    public void draw(Canvas canvas, Paint paint) {
+        if (!segmentLocations.isEmpty()) {
+            Bitmap headBitmap = headBitmapRight;
+            switch (heading) {
+                case RIGHT:
+                    headBitmap = headBitmapRight;
+                    break;
+                case LEFT:
+                    headBitmap = headBitmapLeft;
+                    break;
+                case UP:
+                    headBitmap = headBitmapUp;
+                    break;
+                case DOWN:
+                    headBitmap = headBitmapDown;
+                    break;
+            }
+
+            drawHead(canvas, paint, headBitmap, 0);
+
+            for (int i = 1; i < segmentLocations.size(); i++) {
+                // Draw the circular yellow body bitmap
+                canvas.drawBitmap(bodyBitmap,
+                        segmentLocations.get(i).x * segmentSize,
+                        segmentLocations.get(i).y * segmentSize, paint);
+            }
+        }
+    }
+
+    private void drawHead(Canvas canvas, Paint paint, Bitmap bitmap, int segmentIndex) {
+        if (segmentIndex < segmentLocations.size()) {
+            Point segment = segmentLocations.get(segmentIndex);
+            int x = segment.x * segmentSize;
+            int y = segment.y * segmentSize;
+            canvas.drawBitmap(bitmap, x, y, paint);
+        }
+    }
+
+    @Override
+    public void move() {
+        for (int i = segmentLocations.size() - 1; i > 0; i--) {
+            segmentLocations.get(i).x = segmentLocations.get(i - 1).x;
+            segmentLocations.get(i).y = segmentLocations.get(i - 1).y;
+        }
+        Point p = segmentLocations.get(0);
+        switch (heading) {
+            case UP:
+                p.y--;
+                break;
+            case RIGHT:
+                p.x++;
+                break;
+            case DOWN:
+                p.y++;
+                break;
+            case LEFT:
+                p.x--;
+                break;
+        }
+    }
+
+    boolean detectDeath() {
+        if (segmentLocations.get(0).x < 0 || segmentLocations.get(0).x >= moveRange.x ||
+                segmentLocations.get(0).y < 0 || segmentLocations.get(0).y >= moveRange.y) {
+            return true;
+        }
+
+        Point head = segmentLocations.get(0);
+        for (int i = 1; i < segmentLocations.size(); i++) {
+            if (head.equals(segmentLocations.get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    boolean checkDinner(Point location) {
+        if (segmentLocations.get(0).equals(location)) {
+            segmentLocations.add(new Point(-10, -10));
+            return true;
+        }
+        return false;
+    }
+
+    void switchHeading(MotionEvent motionEvent) {
+        if (motionEvent.getX() >= halfWayPoint) {
+            clockwise();
+        } else {
+            counterClockwise();
+        }
+    }
+
+    private void clockwise() {
+        switch (heading) {
+            case UP:
+                heading = Heading.RIGHT;
+                break;
+            case RIGHT:
+                heading = Heading.DOWN;
+                break;
+            case DOWN:
+                heading = Heading.LEFT;
+                break;
+            case LEFT:
+                heading = Heading.UP;
+                break;
+        }
+    }
+
+    private void counterClockwise() {
+        switch (heading) {
+            case UP:
+                heading = Heading.LEFT;
+                break;
+            case LEFT:
+                heading = Heading.DOWN;
+                break;
+            case DOWN:
+                heading = Heading.RIGHT;
+                break;
+            case RIGHT:
+                heading = Heading.UP;
+                break;
+        }
+    }
+
+    Rect getHeadBounds() {
+        // Calculate the bounds of the snake's head based on its position
+        int left = segmentLocations.get(0).x * segmentSize;
+        int top = segmentLocations.get(0).y * segmentSize;
+        int right = left + segmentSize;
+        int bottom = top + segmentSize;
+        return new Rect(left, top, right, bottom);
+    }
+}
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\SnakeActivity.java
+
+package com.gamecodeschool.c17snake;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.graphics.Point;
+import android.os.Bundle;
+import android.view.Display;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+public class SnakeActivity extends Activity {
+
+    SnakeGame mSnakeGame;
+    LinearLayout SnackGameView;
+    @SuppressLint("StaticFieldLeak")
+    public static TextView btnPauseOrResume;
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        SnackGameView =  findViewById(R.id.idSnakeGameView);
+        btnPauseOrResume =  findViewById(R.id.btnPauseOrResume);
+
+        Display display = getWindowManager().getDefaultDisplay();
+
+        Point size = new Point();
+        display.getSize(size);
+
+        mSnakeGame = new SnakeGame(this, size);
+
+        SnackGameView.addView(mSnakeGame);
+
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSnakeGame.resume();
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSnakeGame.pause();
+    }
+}
+
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\SnakeGame.java
+
+package com.gamecodeschool.c17snake;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.widget.TextView;
+
+import java.io.IOException;
+
+class SnakeGame extends SurfaceView implements Runnable {
+
+    // Objects for the game loop/thread
+    private static Thread mThread = null;
+    // Control pausing between updates
+    private long mNextFrameTime;
+    // Is the game currently playing and or paused?
+    private static volatile boolean mPlaying = false;
+    private volatile boolean mPaused = true;
+
+    // for playing sound effects
+    private final SoundPool mSP;
+    private int mEat_ID = -1;
+    private int mCrashID = -1;
+
+    // The size in segments of the playable area
+    private final int NUM_BLOCKS_WIDE = 15;
+    private final int mNumBlocksHigh;
+    private int speed = 30;
+    private final int blockSize;
+
+    // How many points does the player have
+    private int mScore;
+    private int mHighScore;
+
+    // Objects for drawing
+    private Canvas mCanvas;
+    private final SurfaceHolder mSurfaceHolder;
+    private final Paint mPaint;
+
+    // Game objects
+    private final Snake mSnake;
+    private final Apple mApple;
+    private final Ghost mGhost;
+
+    private final Context mContext;
+
+    TextView btnPauseOrResume;
+
+    // Background image
+    private Bitmap mBackgroundBitmap;
+
+    public SnakeGame(Context context, Point size) {
+        super(context);
+
+        this.mContext = context;
+
+        // Work out how many pixels each block is
+        this.blockSize = size.x / NUM_BLOCKS_WIDE;
+        // How many blocks of the same size will fit into the height
+        this.mNumBlocksHigh = size.y / this.blockSize;
+
+        // Adjust the game area to be slightly smaller than the actual size of the game area
+        int adjustedLeft = (int)(NUM_BLOCKS_WIDE * 0.10);
+        int adjustedTop = (int)(mNumBlocksHigh * 0.17);
+        int adjustedRight = (int)(NUM_BLOCKS_WIDE * 0.945);
+        int adjustedBottom = (int)(mNumBlocksHigh * 0.95);
+        Point adjustedMoveRange = new Point(adjustedRight - adjustedLeft, adjustedBottom - adjustedTop);
+
+        // Initialize the SoundPool
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+
+        mSP = new SoundPool.Builder()
+                .setMaxStreams(5)
+                .setAudioAttributes(audioAttributes)
+                .build();
+        try {
+            AssetManager assetManager = context.getAssets();
+            AssetFileDescriptor descriptor;
+
+            // Prepare the sounds in memory
+            descriptor = assetManager.openFd("get_apple.ogg");
+            mEat_ID = mSP.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("snake_death.ogg");
+            mCrashID = mSP.load(descriptor, 0);
+
+        } catch (IOException e) {
+            // Error
+        }
+
+        // Initialize the drawing objects
+        mSurfaceHolder = getHolder();
+        mPaint = new Paint();
+
+        // Initialize game objects
+        mApple = new Apple(context,
+                adjustedMoveRange,
+                blockSize);
+
+        mSnake = new Snake(context,
+                adjustedMoveRange,
+                blockSize);
+
+        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y));
+
+        // Load the background image
+        try {
+            Bitmap originalBitmap = BitmapFactory.decodeStream(context.getAssets().open("background.png"));
+            mBackgroundBitmap = getScaledBitmap(originalBitmap, size.x, size.y);
+        } catch (IOException e) {
+            // Handle the exception
+            e.printStackTrace();
+        }
+    }
+
+    private Bitmap getScaledBitmap(Bitmap originalBitmap, int newWidth, int newHeight) {
+        float originalAspectRatio = (float) originalBitmap.getWidth() / originalBitmap.getHeight();
+        float newAspectRatio = (float) newWidth / newHeight;
+
+        int scaledWidth, scaledHeight;
+
+        if (newAspectRatio > originalAspectRatio) {
+            // Stretch the image to fit the height of the game area
+            scaledHeight = newHeight;
+            scaledWidth = (int) (newHeight * originalAspectRatio);
+        } else {
+            // Stretch the image to fit the width of the game area
+            scaledWidth = newWidth;
+            scaledHeight = (int) (newWidth / originalAspectRatio);
+            // Adjust the scaledHeight to be slightly smaller
+            scaledHeight = (int) (scaledHeight * 0.95); // Adjust this value to your preference
+        }
+
+        return Bitmap.createScaledBitmap(originalBitmap, scaledWidth, scaledHeight, true);
+    }
+
+
+    boolean playOrNot = false;
+
+    // Handles the game loop
+    @Override
+    public void run() {
+        while (mPlaying) {
+            if (!mPaused) {
+                // Update 10 times a second
+                if (updateRequired()) {
+                    update();
+                }
+            }
+
+            draw();
+        }
+    }
+
+    public boolean updateRequired() {
+        final long TARGET_FPS = 10;
+        final long MILLIS_PER_SECOND = 1000;
+
+        if (mNextFrameTime <= System.currentTimeMillis()) {
+            mNextFrameTime = System.currentTimeMillis()
+                    + MILLIS_PER_SECOND / TARGET_FPS;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void update() {
+        mSnake.move();
+        eatApple();
+        snakeDeath();
+        mGhost.update();
+    }
+
+    private void eatApple() {
+        int newColor = Color.BLUE;
+        if (mSnake.checkDinner(mApple.getLocation())) {
+            // Overloading with parameter
+            mApple.spawn(newColor);
+            mScore++;
+            if (mHighScore < mScore) {
+                mHighScore = mScore;
+            }
+            mSP.play(mEat_ID, 1, 1, 0, 0, 1);
+        }
+    }
+
+    private void snakeDeath() {
+        if (mSnake.detectDeath() || mGhost.getBounds().intersect(mSnake.getHeadBounds())) {
+            mSP.play(mCrashID, 1, 1, 0, 0, 1);
+            try {
+                SnakeActivity.btnPauseOrResume.setVisibility(INVISIBLE);
+            } catch (Exception e) {
+            }
+            mPaused = true;
+            mScore = 0;
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouchEvent(MotionEvent motionEvent) {
+        if ((motionEvent.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
+            if (mPaused) {
+                mPaused = false;
+
+                StartNewGame.newGame(mSnake, mScore, playOrNot, NUM_BLOCKS_WIDE, mNumBlocksHigh, mApple, mNextFrameTime);
+                btnPauseOrResume = SnakeActivity.btnPauseOrResume;
+
+                btnPauseOrResume.setVisibility(VISIBLE);
+
+                btnPauseOrResume.setOnClickListener(v -> {
+                    playOrNot = !playOrNot;
+                    if (playOrNot) {
+                        pause();
+                        btnPauseOrResume.setText("Resume");
+                    } else {
+                        resume();
+                        btnPauseOrResume.setText("Pause");
+                    }
+                });
+                // Don't want to process snake direction for this tap
+                return true;
+            }
+
+            // Let the Snake class handle the input
+            mSnake.switchHeading(motionEvent);
+        }
+        return true;
+    }
+
+    // Draw the game objects on the canvas
+    private void draw() {
+        if (mSurfaceHolder.getSurface().isValid()) {
+            mCanvas = mSurfaceHolder.lockCanvas();
+
+            // Draw the background
+            drawBackground(mCanvas);
+
+            // Draw the apple, snake, and ghost
+            mApple.draw(mCanvas, mPaint);
+            mSnake.draw(mCanvas, mPaint);
+            mGhost.draw(mCanvas);
+
+            // Unlock the canvas and reveal the graphics for this frame
+            mSurfaceHolder.unlockCanvasAndPost(mCanvas);
+        }
+    }
+
+    private void drawBackground(Canvas canvas) {
+        // Draw the background image
+        canvas.drawBitmap(mBackgroundBitmap, 0, 0, null);
+    }
+
+    // Stop the thread
+    public void pause() {
+        mPlaying = false;
+        try {
+            mThread.join();
+        } catch (InterruptedException e) {
+            // Error
+        }
+    }
+
+    // Start the thread
+    public void resume() {
+        mPlaying = true;
+        mThread = new Thread(this);
+        mThread.start();
+    }
+}
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\StartGame.java
+
+package com.gamecodeschool.c17snake;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.util.Log;
+import android.view.SurfaceHolder;
+
+import androidx.core.content.res.ResourcesCompat;
+
+public class StartGame {
+    public static void draw(SurfaceHolder mSurfaceHolder, Canvas mCanvas, int mHighScore, int mScore, Paint mPaint, Apple mApple, Snake mSnake, boolean mPaused, Context mContext) {
+        // Get a lock on the mCanvas
+        if (mSurfaceHolder.getSurface().isValid()) {
+            mCanvas = mSurfaceHolder.lockCanvas();
+
+            // Fill the screen with a color
+            mCanvas.drawColor(Color.parseColor("#f3953d"));
+
+            // Set the size and color of the mPaint for the text
+            mPaint.setColor(Color.parseColor("#000000"));
+
+            mPaint.setTextSize(80);
+
+            // Draw the score
+            mCanvas.drawText("High Score " + mHighScore + " Score:" + mScore, 70, 80, mPaint);
+
+            // Draw the apple and the snake
+            mApple.draw(mCanvas, mPaint);
+            mSnake.draw(mCanvas, mPaint);
+
+            // Draw some text while paused
+            if(mPaused){
+                pauseGame(mPaint,mCanvas,mContext);
+            }
+
+            // Unlock the mCanvas and reveal the graphics for this frame
+            mSurfaceHolder.unlockCanvasAndPost(mCanvas);
+        }
+    }
+    public static void pauseGame(Paint mPaint, Canvas mCanvas, Context mContext){
+        Log.d("tag223","paused");
+
+        // Set the size and color of the mPaint for the text
+        mPaint.setColor(Color.parseColor("#000000"));
+        mPaint.setTextSize(80);
+        mPaint.setTypeface(ResourcesCompat.getFont(mContext, R.font.poppins_regular));
+
+        // Draw the message
+        // We will give this an international upgrade soon
+        //mCanvas.drawText("Tap To Play!", 200, 700, mPaint);
+        mCanvas.drawText("Tap to Play",
+                200, 200, mPaint);
+    }
+
+}
+
+
+File: C:\Users\Admin\Projects\Assignment_Snake_Game\app\src\main\java\com\gamecodeschool\c17snake\StartNewGame.java
+
+package com.gamecodeschool.c17snake;
+
+//import static android.view.View.VISIBLE;
+
+//import android.content.Context;
+//import android.widget.TextView;
+
+import android.graphics.Color;
+
+public class StartNewGame {
+
+
+
+    public static void newGame(Snake mSnake, int mScore, boolean playOrNot, int NUM_BLOCKS_WIDE, int mNumBlocksHigh, Apple mApple, long mNextFrameTime) {
+
+        // reset the snake
+        mSnake.reset(NUM_BLOCKS_WIDE, mNumBlocksHigh);
+        // Get the apple ready for dinner
+        mApple.spawn();
+        // Reset the mScore
+
+        mScore = 0;
+
+
+        // Setup mNextFrameTime so an update can triggered
+        mNextFrameTime = System.currentTimeMillis();
+    }
+
+}
+
+

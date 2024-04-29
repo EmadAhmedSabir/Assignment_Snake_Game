@@ -14,6 +14,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -58,15 +59,20 @@ class SnakeGame extends SurfaceView implements Runnable {
 
     private final Context mContext;
 
-    TextView btnPauseOrResume;
+    TextView SnakeActivity_btnPauseOrResume;
+
+    private TextView mTxtScore;
+    private TextView mTxtHighScore;
 
     // Background image
     private Bitmap mBackgroundBitmap;
 
-    public SnakeGame(Context context, Point size) {
+    public SnakeGame(Context context, Point size, TextView txtScore, TextView txtHighScore) {
         super(context);
 
         this.mContext = context;
+        mTxtScore = txtScore;
+        mTxtHighScore = txtHighScore;
 
         // Work out how many pixels each block is
         this.blockSize = size.x / NUM_BLOCKS_WIDE;
@@ -199,18 +205,24 @@ class SnakeGame extends SurfaceView implements Runnable {
                 mHighScore = mScore;
             }
             mSP.play(mEat_ID, 1, 1, 0, 0, 1);
+
+            // Update the score and high score TextViews
+            mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
+            mTxtHighScore.post(() -> mTxtHighScore.setText("High Score: " + mHighScore));
         }
     }
 
     private void snakeDeath() {
         if (mSnake.detectDeath() || mGhost.getBounds().intersect(mSnake.getHeadBounds())) {
             mSP.play(mCrashID, 1, 1, 0, 0, 1);
-            try {
-                SnakeActivity.btnPauseOrResume.setVisibility(INVISIBLE);
-            } catch (Exception e) {
+            if (SnakeActivity_btnPauseOrResume != null) {
+                SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);
             }
             mPaused = true;
             mScore = 0;
+
+            // Update the score TextView
+            mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
         }
     }
 
@@ -222,20 +234,22 @@ class SnakeGame extends SurfaceView implements Runnable {
                 mPaused = false;
 
                 StartNewGame.newGame(mSnake, mScore, playOrNot, NUM_BLOCKS_WIDE, mNumBlocksHigh, mApple, mNextFrameTime);
-                btnPauseOrResume = SnakeActivity.btnPauseOrResume;
+                SnakeActivity_btnPauseOrResume = SnakeActivity.btnPauseOrResume;
 
-                btnPauseOrResume.setVisibility(VISIBLE);
+                if (SnakeActivity_btnPauseOrResume != null) {
+                    SnakeActivity_btnPauseOrResume.setVisibility(VISIBLE);
 
-                btnPauseOrResume.setOnClickListener(v -> {
-                    playOrNot = !playOrNot;
-                    if (playOrNot) {
-                        pause();
-                        btnPauseOrResume.setText("Resume");
-                    } else {
-                        resume();
-                        btnPauseOrResume.setText("Pause");
-                    }
-                });
+                    SnakeActivity_btnPauseOrResume.setOnClickListener(v -> {
+                        playOrNot = !playOrNot;
+                        if (playOrNot) {
+                            pause();
+                            SnakeActivity_btnPauseOrResume.setText("Resume");
+                        } else {
+                            resume();
+                            SnakeActivity_btnPauseOrResume.setText("Pause");
+                        }
+                    });
+                }
                 // Don't want to process snake direction for this tap
                 return true;
             }
