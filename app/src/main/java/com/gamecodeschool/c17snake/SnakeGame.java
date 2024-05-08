@@ -208,6 +208,9 @@ class SnakeGame extends SurfaceView implements Runnable {
             // Update the score and high score TextViews
             mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
             mTxtHighScore.post(() -> mTxtHighScore.setText("High Score: " + mHighScore));
+
+            // Notify the ghost that the player has eaten an apple
+            mGhost.onAppleEaten();
         }
     }
 

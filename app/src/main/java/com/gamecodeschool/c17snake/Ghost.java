@@ -16,6 +16,7 @@ public class Ghost {
     private final Rect bounds;
     private final Paint paint;
     private boolean isFollowing;
+    private int currentColor;
 
     public Ghost(Context context, int size, int speed, Rect gameBounds, Point snakePosition) {
         SIZE = size;
@@ -24,8 +25,17 @@ public class Ghost {
         position = new Point();
         this.snakePosition = snakePosition;
         paint = new Paint();
-        paint.setColor(Color.RED);
         resetPosition();
+        setRandomColor();
+    }
+
+    private void setRandomColor() {
+        currentColor = Color.rgb(
+                (int)(Math.random() * 256),
+                (int)(Math.random() * 256),
+                (int)(Math.random() * 256)
+        );
+        paint.setColor(currentColor);
     }
 
     public void draw(Canvas canvas) {
@@ -90,5 +100,9 @@ public class Ghost {
 
     public boolean detectCollision(Rect snakeRect) {
         return getBounds().intersect(snakeRect);
+    }
+
+    public void onAppleEaten() {
+        setRandomColor();
     }
 }
