@@ -9,8 +9,8 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.view.MotionEvent;
-
 import java.util.ArrayList;
+import android.os.Handler;
 
 class Snake implements Drawable, Movable {
 
@@ -28,46 +28,67 @@ class Snake implements Drawable, Movable {
     private Bitmap headBitmapUp;
     private Bitmap headBitmapDown;
     private Bitmap bodyBitmap;
-
+    private final int[] animationSequence = {R.drawable.pacman1, R.drawable.pacman2, R.drawable.pacman3};
+    private int currentAnimationFrame = 0; // Index of the current frame in the animation sequence
+    private Context context; // Context reference for resource loading
+    private static final long ANIMATION_DELAY_MS = 400; //delay? doesn't do anything
+    private Handler animationHandler;
     Snake(Context context, Point moveRange, int segmentSize) {
         segmentLocations = new ArrayList<>();
         this.segmentSize = segmentSize;
         this.moveRange = moveRange;
+        this.context = context;
 
-        // Load the head bitmap
-        Bitmap headBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.head);
-        // Change head color to yellow
-        headBitmaps(headBitmap, segmentSize);
+        // Load the head bitmaps
+        loadHeadBitmap(animationSequence[currentAnimationFrame]);
+
+        // Load and process the body bitmap
         bodyBitmap(context, segmentSize);
+
+        // Calculate the halfway point
         calculateHalfWayPoint(moveRange, segmentSize);
+        animationHandler = new Handler();
+        startAnimation();
+    }
+
+    private void loadHeadBitmap(int resId) {
+        Bitmap headBitmap = BitmapFactory.decodeResource(context.getResources(), resId);
+        // Process the bitmap as needed (e.g., resize, rotate, change color)
+        headBitmap = processHeadBitmap(headBitmap, segmentSize);
+        // Update all head bitmaps with the loaded bitmap
+        headBitmapRight = headBitmap;
+        headBitmapLeft = flipBitmap(headBitmap);
+        headBitmapUp = rotateBitmap(headBitmap, -90);
+        headBitmapDown = rotateBitmap(headBitmap, 90);
+    }
+
+    private Bitmap processHeadBitmap(Bitmap bitmap, int segmentSize) {
+        return Bitmap.createScaledBitmap(bitmap, segmentSize, segmentSize, false);
     }
 
     private Bitmap rotateBitmap(Bitmap bitmap, float degrees) {
         Matrix matrix = new Matrix();
-        matrix.preRotate(degrees);
+        matrix.preRotate(degrees); // Rotate by the specified degrees
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
+    private void startAnimation() {
+        // Schedule the animation to update at a fixed delay
+        animationHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Update the head bitmap for animation
+                updateHeadBitmap();
+                // Restart the animation loop
+                startAnimation();
+            }
+        }, ANIMATION_DELAY_MS);
+    }
 
-    private void headBitmaps(Bitmap headBitmap, int segmentSize) {
-        // Create a circular bitmap with a yellow color for the head
-        Bitmap headBitmapYellow = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(headBitmapYellow);
-        Paint paint = new Paint();
-        paint.setColor(Color.YELLOW);
-        canvas.drawCircle(segmentSize / 2f, segmentSize / 2f, segmentSize / 2f, paint);
 
-        // Apply the head bitmap on the circular mask
-        Bitmap finalBitmap = Bitmap.createBitmap(segmentSize, segmentSize, Bitmap.Config.ARGB_8888);
-        Canvas finalCanvas = new Canvas(finalBitmap);
-        paint.setXfermode(new android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN));
-        finalCanvas.drawBitmap(headBitmap, 0, 0, null);
-        finalCanvas.drawBitmap(headBitmapYellow, 0, 0, paint);
-
-        // Rotate the head bitmaps as needed
-        headBitmapRight = finalBitmap;
-        headBitmapLeft = flipBitmap(headBitmapRight);
-        headBitmapUp = rotateBitmap(headBitmapRight, -90);
-        headBitmapDown = rotateBitmap(headBitmapRight, 180);
+    private Bitmap flipBitmap(Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        matrix.preScale(-1, 1);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
     private void bodyBitmap(Context context, int segmentSize) {
@@ -77,12 +98,6 @@ class Snake implements Drawable, Movable {
         Paint paint = new Paint();
         paint.setColor(Color.YELLOW);
         canvas.drawCircle(segmentSize / 2f, segmentSize / 2f, segmentSize / 2f, paint);
-    }
-
-    private Bitmap flipBitmap(Bitmap bitmap) {
-        Matrix matrix = new Matrix();
-        matrix.preScale(-1, 1);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
     private void calculateHalfWayPoint(Point moveRange, int segmentSize) {
@@ -155,6 +170,14 @@ class Snake implements Drawable, Movable {
                 p.x--;
                 break;
         }
+
+        // Update the head bitmap for animation
+        updateHeadBitmap();
+    }
+
+    private void updateHeadBitmap() {
+        currentAnimationFrame = (currentAnimationFrame + 1) % animationSequence.length;
+        loadHeadBitmap(animationSequence[currentAnimationFrame]);
     }
 
     boolean detectDeath() {
