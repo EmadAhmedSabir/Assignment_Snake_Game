@@ -1,31 +1,30 @@
-
 package com.gamecodeschool.c17snake;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
-import java.util.Random;
 import android.graphics.Rect;
-
+import java.util.Random;
 
 public class Ghost {
-
     private final int SIZE;
     private final int SPEED;
-    private final Point position;
-    private final Random random;
+    private Point position;
+    private final Point snakePosition;
     private final Rect bounds;
     private final Paint paint;
+    private boolean isFollowing;
 
-    public Ghost(Context context, int size, int speed, Rect gameBounds) {
+    public Ghost(Context context, int size, int speed, Rect gameBounds, Point snakePosition) {
         SIZE = size;
         SPEED = speed;
         bounds = gameBounds;
         position = new Point();
+        this.snakePosition = snakePosition;
         paint = new Paint();
         paint.setColor(Color.RED);
-        random = new Random();
         resetPosition();
     }
 
@@ -39,11 +38,26 @@ public class Ghost {
     }
 
     private void move() {
-        int dx = random.nextInt(3) - 1;
-        int dy = random.nextInt(3) - 1;
+        if (isFollowing) {
+            // Calculate the direction to move towards the snake
+            int dx = Integer.compare(snakePosition.x, position.x);
+            int dy = Integer.compare(snakePosition.y, position.y);
 
-        position.x += dx * SPEED;
-        position.y += dy * SPEED;
+            // Move the ghost towards the snake
+            position.x += dx * SPEED;
+            position.y += dy * SPEED;
+        } else {
+            // Move the ghost randomly
+            int dx = new Random().nextInt(3) - 1;
+            int dy = new Random().nextInt(3) - 1;
+            position.x += dx * SPEED;
+            position.y += dy * SPEED;
+
+            // Check if the ghost is close enough to the snake to start following
+            if (Math.abs(position.x - snakePosition.x) <= 3 * SIZE && Math.abs(position.y - snakePosition.y) <= 3 * SIZE) {
+                isFollowing = true;
+            }
+        }
     }
 
     private void checkBoundaries() {
@@ -69,7 +83,12 @@ public class Ghost {
     }
 
     public void resetPosition() {
-        position.x = random.nextInt(bounds.right - SIZE);
-        position.y = random.nextInt(bounds.bottom - SIZE);
+        position.x = new Random().nextInt(bounds.right - SIZE);
+        position.y = new Random().nextInt(bounds.bottom - SIZE);
+        isFollowing = false;
+    }
+
+    public boolean detectCollision(Rect snakeRect) {
+        return getBounds().intersect(snakeRect);
     }
 }

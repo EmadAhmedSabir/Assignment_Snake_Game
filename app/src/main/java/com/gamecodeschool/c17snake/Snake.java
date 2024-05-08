@@ -1,4 +1,5 @@
 package com.gamecodeschool.c17snake;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -33,6 +34,7 @@ class Snake implements Drawable, Movable {
     private Context context; // Context reference for resource loading
     private static final long ANIMATION_DELAY_MS = 400; //delay? doesn't do anything
     private Handler animationHandler;
+
     Snake(Context context, Point moveRange, int segmentSize) {
         segmentLocations = new ArrayList<>();
         this.segmentSize = segmentSize;
@@ -252,5 +254,9 @@ class Snake implements Drawable, Movable {
         int right = left + segmentSize;
         int bottom = top + segmentSize;
         return new Rect(left, top, right, bottom);
+    }
+
+    public Point getHeadPosition() {
+        return segmentLocations.get(0);
     }
 }

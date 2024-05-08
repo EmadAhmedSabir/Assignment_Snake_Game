@@ -8,13 +8,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -123,8 +121,10 @@ class SnakeGame extends SurfaceView implements Runnable {
         mSnake = new Snake(context,
                 adjustedMoveRange,
                 blockSize);
+        mSnake.reset(size.x, size.y); // Call reset() before accessing getHeadPosition()
 
-        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y));
+        // Pass the snake's head position to the Ghost constructor
+        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition());
 
         // Load the background image
         try {
@@ -156,7 +156,6 @@ class SnakeGame extends SurfaceView implements Runnable {
 
         return Bitmap.createScaledBitmap(originalBitmap, scaledWidth, scaledHeight, true);
     }
-
 
     boolean playOrNot = false;
 
@@ -213,7 +212,7 @@ class SnakeGame extends SurfaceView implements Runnable {
     }
 
     private void snakeDeath() {
-        if (mSnake.detectDeath() || mGhost.getBounds().intersect(mSnake.getHeadBounds())) {
+        if (mSnake.detectDeath() || mGhost.detectCollision(mSnake.getHeadBounds())) {
             mSP.play(mCrashID, 1, 1, 0, 0, 1);
             if (SnakeActivity_btnPauseOrResume != null) {
                 SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);
