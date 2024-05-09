@@ -17,6 +17,8 @@ public class Ghost {
     private final Paint paint;
     private boolean isFollowing;
     private int currentColor;
+    private int downMovementCount;
+    private boolean hasExitedBox;
 
     public Ghost(Context context, int size, int speed, Rect gameBounds, Point snakePosition) {
         SIZE = size;
@@ -27,6 +29,8 @@ public class Ghost {
         paint = new Paint();
         resetPosition();
         setRandomColor();
+        downMovementCount = 0;
+        hasExitedBox = false;
     }
 
     private void setRandomColor() {
@@ -57,15 +61,22 @@ public class Ghost {
             position.x += dx * SPEED;
             position.y += dy * SPEED;
         } else {
-            // Move the ghost randomly
-            int dx = new Random().nextInt(3) - 1;
-            int dy = new Random().nextInt(3) - 1;
-            position.x += dx * SPEED;
-            position.y += dy * SPEED;
+            if (downMovementCount < 12) {
+                // Move the ghost downwards
+                position.y += SPEED;
+                downMovementCount++;
+            } else {
+                // Move the ghost randomly
+                int dx = new Random().nextInt(3) - 1;
+                int dy = new Random().nextInt(3) - 1;
+                position.x += dx * SPEED;
+                position.y += dy * SPEED;
 
-            // Check if the ghost is close enough to the snake to start following
-            if (Math.abs(position.x - snakePosition.x) <= 3 * SIZE && Math.abs(position.y - snakePosition.y) <= 3 * SIZE) {
-                isFollowing = true;
+                // Check if the ghost is close enough to the snake to start following
+                if (Math.abs(position.x - snakePosition.x) <= 3 * SIZE && Math.abs(position.y - snakePosition.y) <= 3 * SIZE) {
+                    isFollowing = true;
+                    hasExitedBox = true;
+                }
             }
         }
     }
@@ -97,6 +108,8 @@ public class Ghost {
         position.x = 150;
         position.y = 150;
         isFollowing = false;
+        downMovementCount = 0;
+        hasExitedBox = false;
     }
 
     public boolean detectCollision(Rect snakeRect) {
@@ -105,5 +118,9 @@ public class Ghost {
 
     public void onAppleEaten() {
         setRandomColor();
+        if (hasExitedBox) {
+            // Reset the ghost's position and movement count if it has already exited the box
+            resetPosition();
+        }
     }
 }
