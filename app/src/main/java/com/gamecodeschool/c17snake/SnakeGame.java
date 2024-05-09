@@ -228,7 +228,24 @@ class SnakeGame extends SurfaceView implements Runnable {
 
             // Reset the ghost position to the top left corner
             mGhost.resetPosition();
+
+            // Draw the "Tap to Start" text
+            drawTapToStartText(mCanvas);
         }
+    }
+
+    private void drawTapToStartText(Canvas canvas) {
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(80);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+
+        String tapToStartText = "Tap to Start";
+        float textWidth = textPaint.measureText(tapToStartText);
+        float canvasWidth = canvas.getWidth();
+        float canvasHeight = canvas.getHeight();
+
+        canvas.drawText(tapToStartText, canvasWidth / 2, canvasHeight / 2 + (textPaint.descent() + textPaint.ascent()) / 2, textPaint);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -273,10 +290,15 @@ class SnakeGame extends SurfaceView implements Runnable {
             // Draw the background
             drawBackground(mCanvas);
 
-            // Draw the apple, snake, and ghost
-            mApple.draw(mCanvas, mPaint);
-            mSnake.draw(mCanvas, mPaint);
-            mGhost.draw(mCanvas);
+            // Draw the "Tap to Start" text if the game is paused
+            if (mPaused) {
+                drawTapToStartText(mCanvas);
+            } else {
+                // Draw the apple, snake, and ghost
+                mApple.draw(mCanvas, mPaint);
+                mSnake.draw(mCanvas, mPaint);
+                mGhost.draw(mCanvas);
+            }
 
             // Unlock the canvas and reveal the graphics for this frame
             mSurfaceHolder.unlockCanvasAndPost(mCanvas);

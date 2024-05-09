@@ -1,23 +1,22 @@
 package com.gamecodeschool.c17snake;
 
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
-
-import androidx.core.content.res.ResourcesCompat;
 
 public class StartGame {
-    public static void pauseGame(Paint mPaint, Canvas mCanvas, Context mContext) {
-        Log.d("tag223", "paused");
 
-        // Set the size and color of the mPaint for the text
-        mPaint.setColor(Color.parseColor("#000000"));
-        mPaint.setTextSize(80);
-        mPaint.setTypeface(ResourcesCompat.getFont(mContext, R.font.poppins_regular));
+    public static void drawTapToStartText(Canvas canvas) {
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(80);
+        textPaint.setTextAlign(Paint.Align.CENTER);
 
-        // Draw the message
-        mCanvas.drawText("Tap to Play", 200, 200, mPaint);
+        String tapToStartText = "Tap to Start";
+        float textWidth = textPaint.measureText(tapToStartText);
+        float canvasWidth = canvas.getWidth();
+        float canvasHeight = canvas.getHeight();
+
+        canvas.drawText(tapToStartText, canvasWidth / 2, canvasHeight / 2 + (textPaint.descent() + textPaint.ascent()) / 2, textPaint);
     }
 }
