@@ -1,12 +1,15 @@
 package com.gamecodeschool.c17snake;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import java.util.Random;
+import android.graphics.Color;
+
 
 public class Ghost {
     private final int SIZE;
@@ -16,9 +19,14 @@ public class Ghost {
     private final Rect bounds;
     private final Paint paint;
     private boolean isFollowing;
-    private int currentColor;
+    private boolean isEdible;
     private int downMovementCount;
     private boolean hasExitedBox;
+    private Bitmap[] edibleGhostImages;
+    private int currentFrameIndex;
+    private long lastFrameTime;
+    private static final long FRAME_UPDATE_TIME = 500;
+
 
     public Ghost(Context context, int size, int speed, Rect gameBounds, Point snakePosition) {
         SIZE = size;
@@ -27,23 +35,29 @@ public class Ghost {
         position = new Point();
         this.snakePosition = snakePosition;
         paint = new Paint();
+        paint.setColor(Color.RED);
         resetPosition();
-        setRandomColor();
-        downMovementCount = 0;
-        hasExitedBox = false;
-    }
+        isEdible = false;
+        edibleGhostImages = new Bitmap[] {
+                BitmapFactory.decodeResource(context.getResources(), R.drawable.blue),
+                BitmapFactory.decodeResource(context.getResources(), R.drawable.blue2)
+        };
+        lastFrameTime = System.currentTimeMillis();
 
-    private void setRandomColor() {
-        currentColor = Color.rgb(
-                (int)(Math.random() * 256),
-                (int)(Math.random() * 256),
-                (int)(Math.random() * 256)
-        );
-        paint.setColor(currentColor);
     }
 
     public void draw(Canvas canvas) {
-        canvas.drawRect(position.x, position.y, position.x + SIZE, position.y + SIZE, paint);
+        if (isEdible) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastFrameTime > FRAME_UPDATE_TIME) {
+                currentFrameIndex = (currentFrameIndex + 1) % edibleGhostImages.length;
+                lastFrameTime = currentTime;
+            }
+            canvas.drawBitmap(edibleGhostImages[currentFrameIndex], position.x, position.y, paint);
+        } else {
+            // Draw the ghost as a simple black square when not edible
+            canvas.drawRect(position.x, position.y, position.x + SIZE, position.y + SIZE, paint);
+        }
     }
 
     public void update() {
@@ -99,17 +113,14 @@ public class Ghost {
         return new Rect(position.x, position.y, position.x + SIZE, position.y + SIZE);
     }
 
-    public Point getPosition() {
-        return position;
-    }
-
     public void resetPosition() {
-        // Set the initial position of the ghost in the top left corner
         position.x = 150;
         position.y = 150;
         isFollowing = false;
         downMovementCount = 0;
         hasExitedBox = false;
+        currentFrameIndex = 0; // Reset animation frame
+        isEdible = false; // Ensure the ghost starts as not edible
     }
 
     public boolean detectCollision(Rect snakeRect) {
@@ -117,10 +128,7 @@ public class Ghost {
     }
 
     public void onAppleEaten() {
-        setRandomColor();
-        if (hasExitedBox) {
-            // Reset the ghost's position and movement count if it has already exited the box
-            resetPosition();
-        }
+        isEdible = true;
+        currentFrameIndex = 0; // Start animation from the first frame
     }
 }
