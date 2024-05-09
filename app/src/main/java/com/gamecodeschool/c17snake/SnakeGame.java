@@ -225,6 +225,9 @@ class SnakeGame extends SurfaceView implements Runnable {
 
             // Update the score TextView
             mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
+
+            // Reset the ghost position to the top left corner
+            mGhost.resetPosition();
         }
     }
 

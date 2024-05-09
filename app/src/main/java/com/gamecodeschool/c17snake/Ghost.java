@@ -93,8 +93,9 @@ public class Ghost {
     }
 
     public void resetPosition() {
-        position.x = new Random().nextInt(bounds.right - SIZE);
-        position.y = new Random().nextInt(bounds.bottom - SIZE);
+        // Set the initial position of the ghost in the top left corner
+        position.x = 150;
+        position.y = 150;
         isFollowing = false;
     }
 
