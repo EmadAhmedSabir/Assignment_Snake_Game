@@ -14,21 +14,26 @@ import android.graphics.Color;
 public class Ghost {
     private final int SIZE;
     private final int SPEED;
-    private Point position;
+    protected Point position;
     private final Point snakePosition;
     private final Rect bounds;
-    private final Paint paint;
+    protected final Paint paint;
     private boolean isFollowing;
-    private boolean isEdible;
+    protected boolean isEdible;
     private int downMovementCount;
     private boolean hasExitedBox;
     private Bitmap[] edibleGhostImages;
-    private int currentFrameIndex;
-    private long lastFrameTime;
-    private static final long FRAME_UPDATE_TIME = 500;
+    protected int currentFrameIndex;
+    protected long lastFrameTime;
+    protected static final long FRAME_UPDATE_TIME = 500;
+    protected boolean isEaten;
+
+    public boolean isEaten() {
+        return isEaten;
+    }
 
 
-    public Ghost(Context context, int size, int speed, Rect gameBounds, Point snakePosition) {
+    public Ghost(Context context, int size, int speed, Rect gameBounds, Point snakePosition, Boolean isEdible) {
         SIZE = size;
         SPEED = speed;
         bounds = gameBounds;
@@ -37,13 +42,19 @@ public class Ghost {
         paint = new Paint();
         paint.setColor(Color.RED);
         resetPosition();
-        isEdible = false;
+        this.isEdible = isEdible;
         edibleGhostImages = new Bitmap[] {
                 BitmapFactory.decodeResource(context.getResources(), R.drawable.blue),
                 BitmapFactory.decodeResource(context.getResources(), R.drawable.blue2)
         };
         lastFrameTime = System.currentTimeMillis();
 
+    }
+    public boolean isEdible(){
+        return isEdible;
+    }
+    public void setIsEdible(boolean edible) {
+        isEdible = edible;
     }
 
     public void draw(Canvas canvas) {
@@ -59,6 +70,7 @@ public class Ghost {
             canvas.drawRect(position.x, position.y, position.x + SIZE, position.y + SIZE, paint);
         }
     }
+
 
     public void update() {
         move();
@@ -124,11 +136,17 @@ public class Ghost {
     }
 
     public boolean detectCollision(Rect snakeRect) {
+        // Detect collision based on bounding rectangles only
         return getBounds().intersect(snakeRect);
     }
 
     public void onAppleEaten() {
         isEdible = true;
         currentFrameIndex = 0; // Start animation from the first frame
+
+    }
+    public void eat() {
+        isEaten = true;  // Set the ghost as eaten
+        isEdible = false;  // Once eaten, it should no longer be edible
     }
 }

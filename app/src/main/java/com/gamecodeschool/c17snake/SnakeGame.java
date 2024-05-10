@@ -17,6 +17,9 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.TextView;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import java.io.IOException;
 
@@ -53,7 +56,7 @@ class SnakeGame extends SurfaceView implements Runnable {
     // Game objects
     private final Snake mSnake;
     private final Apple mApple;
-    private final Ghost mGhost;
+    private Ghost mGhost;
 
     private final Context mContext;
 
@@ -65,12 +68,16 @@ class SnakeGame extends SurfaceView implements Runnable {
     // Background image
     private Bitmap mBackgroundBitmap;
 
+    private List<Ghost> ghosts;
+    private final Rect gameBounds;
+
     public SnakeGame(Context context, Point size, TextView txtScore, TextView txtHighScore) {
         super(context);
 
         this.mContext = context;
         mTxtScore = txtScore;
         mTxtHighScore = txtHighScore;
+        this.gameBounds = new Rect(0, 0, size.x, size.y);
 
         // Work out how many pixels each block is
         this.blockSize = size.x / NUM_BLOCKS_WIDE;
@@ -124,7 +131,7 @@ class SnakeGame extends SurfaceView implements Runnable {
         mSnake.reset(size.x, size.y); // Call reset() before accessing getHeadPosition()
 
         // Pass the snake's head position to the Ghost constructor
-        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition());
+        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false);
 
         // Load the background image
         try {
@@ -134,7 +141,50 @@ class SnakeGame extends SurfaceView implements Runnable {
             // Handle the exception
             e.printStackTrace();
         }
+        ghosts = new ArrayList<>();
+        ghosts.add(new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
+        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
+        //add your guy's ghost here to the array list
+
+        spawnRandomGhost(); // Initial spawn
     }
+
+    private void spawnRandomGhost() {
+        Random random = new Random();
+        int ghostType = random.nextInt(5); // Generate a random number between 0 and 4
+        switch (ghostType) {
+            case 0:
+                mGhost = new Ghost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+                break;
+            case 1:
+                mGhost = new SamGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+                break;
+            /*case 2:
+                mGhost = new JacobGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+                break;
+            case 3:
+                mGhost = new EmadGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+                break;
+            case 4:
+                mGhost = new EvaGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+                break;*/
+            default:
+                mGhost = new Ghost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false); // Fallback
+        }
+        ghosts.clear();
+        ghosts.add(mGhost);
+    }
+
+
+    private void checkGhostEaten() {
+        if (mGhost.isEdible() && mGhost.detectCollision(mSnake.getHeadBounds())) {
+            mGhost.eat();
+            mScore += 10;
+            updateScoreDisplay();
+            spawnRandomGhost();
+        }
+    }
+
 
     private Bitmap getScaledBitmap(Bitmap originalBitmap, int newWidth, int newHeight) {
         float originalAspectRatio = (float) originalBitmap.getWidth() / originalBitmap.getHeight();
@@ -191,28 +241,54 @@ class SnakeGame extends SurfaceView implements Runnable {
         mSnake.move();
         eatApple();
         snakeDeath();
-        mGhost.update();
+        for (Ghost ghost : ghosts) {
+            ghost.update();
+        }
+        checkCollisions();
+        checkGhostEaten();
     }
 
     private void eatApple() {
         int newColor = Color.BLUE;
         if (mSnake.checkDinner(mApple.getLocation())) {
-            // Overloading with parameter
+            // Spawn a new apple with the specified color
             mApple.spawn(newColor);
+
+            // Increase the score
             mScore++;
-            if (mHighScore < mScore) {
-                mHighScore = mScore;
-            }
+            updateHighScore();
+            mSP.play(mEat_ID, 1, 1, 0, 0, 1);
+            updateScoreDisplay();
+
+
+            // Play the eating sound effect
             mSP.play(mEat_ID, 1, 1, 0, 0, 1);
 
-            // Update the score and high score TextViews
-            mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
-            mTxtHighScore.post(() -> mTxtHighScore.setText("High Score: " + mHighScore));
 
-            // Notify the ghost that the player has eaten an apple
+            mGhost.setIsEdible(true);
             mGhost.onAppleEaten();
+
+            if (shouldSpawnNewGhost()) {
+                spawnRandomGhost();
+            }
+
+
         }
     }
+
+    private void updateHighScore() {
+        if (mHighScore < mScore) {
+            mHighScore = mScore;
+        }
+    }
+    private void updateScoreDisplay() {
+        mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
+        mTxtHighScore.post(() -> mTxtHighScore.setText("HiScore: " + mHighScore));
+    }
+
+
+
+
 
     private void snakeDeath() {
         if (mSnake.detectDeath() || mGhost.detectCollision(mSnake.getHeadBounds())) {
@@ -286,23 +362,19 @@ class SnakeGame extends SurfaceView implements Runnable {
     private void draw() {
         if (mSurfaceHolder.getSurface().isValid()) {
             mCanvas = mSurfaceHolder.lockCanvas();
-
-            // Draw the background
             drawBackground(mCanvas);
-
-            // Draw the "Tap to Start" text if the game is paused
-            if (mPaused) {
-                drawTapToStartText(mCanvas);
-            } else {
-                // Draw the apple, snake, and ghost
-                mApple.draw(mCanvas, mPaint);
-                mSnake.draw(mCanvas, mPaint);
-                mGhost.draw(mCanvas);
+            mApple.draw(mCanvas, mPaint);
+            mSnake.draw(mCanvas, mPaint);
+            if (!mGhost.isEaten()) {
+                mGhost.draw(mCanvas);  // Only draw the ghost if it hasn't been eaten
             }
-
-            // Unlock the canvas and reveal the graphics for this frame
             mSurfaceHolder.unlockCanvasAndPost(mCanvas);
         }
+    }
+
+    private boolean shouldSpawnNewGhost() {
+        // Define conditions under which a new ghost should spawn
+        return false; // Implement your condition
     }
 
     private void drawBackground(Canvas canvas) {
@@ -326,4 +398,16 @@ class SnakeGame extends SurfaceView implements Runnable {
         mThread = new Thread(this);
         mThread.start();
     }
+    private void checkCollisions() {
+        if (mGhost.detectCollision(mSnake.getHeadBounds())) {
+            if (mGhost.isEdible()) {
+                mGhost.eat();
+                spawnRandomGhost();
+                mScore++;
+            } else {
+                snakeDeath();
+            }
+        }
+    }
+
 }
