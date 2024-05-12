@@ -9,19 +9,19 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import androidx.annotation.DrawableRes;
 
-public class EvasGhost extends Ghost {
+public class EmadsGhost extends Ghost {
 
-    private Bitmap[] evaGhostImages;
+    private Bitmap[] emadGhostImages;
     private Bitmap[] edibleGhostImage;
     private int currentFrameIndex; // Index of the current frame in the animation sequence
 
-    public EvasGhost(Context context, int size, int speed, Rect gameBounds, Boolean isEdible) {
+    public EmadsGhost(Context context, int size, int speed, Rect gameBounds, Boolean isEdible) {
         super(context, size, speed, gameBounds, isEdible);
         this.currentFrameIndex = 0;
         // Initialize the non-edible animation frames
-        evaGhostImages = new Bitmap[] {
-                BitmapFactory.decodeResource(context.getResources(), R.drawable.eva1),
-                BitmapFactory.decodeResource(context.getResources(), R.drawable.eva2)
+        emadGhostImages = new Bitmap[] {
+                BitmapFactory.decodeResource(context.getResources(), R.drawable.emad1),
+                BitmapFactory.decodeResource(context.getResources(), R.drawable.emad2)
         };
         // Initialize the edible image
         edibleGhostImage= new Bitmap[]{
@@ -35,10 +35,10 @@ public class EvasGhost extends Ghost {
         if (!isEdible) {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastFrameTime > FRAME_UPDATE_TIME) {
-                currentFrameIndex = (currentFrameIndex + 1) % evaGhostImages.length;
+                currentFrameIndex = (currentFrameIndex + 1) % emadGhostImages.length;
                 lastFrameTime = currentTime;
             }
-            canvas.drawBitmap(evaGhostImages[currentFrameIndex], position.x, position.y, paint);
+            canvas.drawBitmap(emadGhostImages[currentFrameIndex], position.x, position.y, paint);
         } else {
             // Draw the single blue ghost image when edible
             canvas.drawBitmap(edibleGhostImage[currentFrameIndex], position.x, position.y, paint);
@@ -57,5 +57,6 @@ public class EvasGhost extends Ghost {
 
 
 }
+
 
 
