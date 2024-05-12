@@ -7,38 +7,34 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
-import java.util.Random;
 import android.graphics.Color;
 
 
 public class Ghost {
     private final int SIZE;
-    private final int SPEED;
+    private int SPEED;
     protected Point position;
-    private final Point snakePosition;
     private final Rect bounds;
     protected final Paint paint;
-    private boolean isFollowing;
     protected boolean isEdible;
-    private int downMovementCount;
-    private boolean hasExitedBox;
-    private Bitmap[] edibleGhostImages;
+    protected int downMovementCount;
+    private final Bitmap[] edibleGhostImages;
     protected int currentFrameIndex;
     protected long lastFrameTime;
     protected static final long FRAME_UPDATE_TIME = 500;
     protected boolean isEaten;
+    protected int maxDownMovementCount;
 
     public boolean isEaten() {
         return isEaten;
     }
 
 
-    public Ghost(Context context, int size, int speed, Rect gameBounds, Point snakePosition, Boolean isEdible) {
+    public Ghost(Context context, int size, int speed, Rect gameBounds , Boolean isEdible) {
         SIZE = size;
         SPEED = speed;
         bounds = gameBounds;
         position = new Point();
-        this.snakePosition = snakePosition;
         paint = new Paint();
         paint.setColor(Color.RED);
         resetPosition();
@@ -73,39 +69,41 @@ public class Ghost {
 
 
     public void update() {
-        move();
+        if (!isEdible) { // Only update movement if not edible
+            move();
+        }
         checkBoundaries();
     }
-
+    public Point getGhostPosition() {
+        return new Point(position);
+    }
     private void move() {
-        if (isFollowing) {
-            // Calculate the direction to move towards the snake
-            int dx = Integer.compare(snakePosition.x, position.x);
-            int dy = Integer.compare(snakePosition.y, position.y);
-
-            // Move the ghost towards the snake
-            position.x += dx * SPEED;
-            position.y += dy * SPEED;
+        maxDownMovementCount = 12;
+        if (downMovementCount < maxDownMovementCount) {
+            // Move the ghost downwards for a randomly determined number of steps (8 to 12)
+            position.y += SPEED;
+            downMovementCount++;
         } else {
-            if (downMovementCount < 12) {
-                // Move the ghost downwards
-                position.y += SPEED;
-                downMovementCount++;
-            } else {
-                // Move the ghost randomly
-                int dx = new Random().nextInt(3) - 1;
-                int dy = new Random().nextInt(3) - 1;
-                position.x += dx * SPEED;
-                position.y += dy * SPEED;
+            // Check horizontal boundaries to change direction
+            if (position.x <= bounds.left || position.x + SIZE >= bounds.right) {
+                SPEED = -SPEED;  // Reverse the direction of movement
+            }
 
-                // Check if the ghost is close enough to the snake to start following
-                if (Math.abs(position.x - snakePosition.x) <= 3 * SIZE && Math.abs(position.y - snakePosition.y) <= 3 * SIZE) {
-                    isFollowing = true;
-                    hasExitedBox = true;
+            // Move the ghost horizontally
+            position.x += SPEED;
+
+            // After moving downwards the required number of times, adjust the direction horizontally
+            if (downMovementCount == maxDownMovementCount) {
+                if (position.x < bounds.width() / 2) {
+                    SPEED = Math.abs(SPEED);  // Ensure speed is positive, moving right
+                } else {
+                    SPEED = -Math.abs(SPEED);  // Ensure speed is negative, moving left
                 }
+                downMovementCount++;  // Increment to prevent reinitializing SPEED
             }
         }
     }
+
 
     private void checkBoundaries() {
         if (position.x < bounds.left) {
@@ -128,24 +126,10 @@ public class Ghost {
     public void resetPosition() {
         position.x = 150;
         position.y = 150;
-        isFollowing = false;
         downMovementCount = 0;
-        hasExitedBox = false;
         currentFrameIndex = 0; // Reset animation frame
         isEdible = false; // Ensure the ghost starts as not edible
     }
-
-
-    public void resetPosition2() {
-        position.x = 400;
-        position.y = 400;
-        isFollowing = true;
-        downMovementCount = 0;
-        hasExitedBox = false;
-        currentFrameIndex = 0; // Reset animation frame
-        isEdible = true; // Ensure the ghost starts as not edible
-    }
-
 
 
 
@@ -164,3 +148,4 @@ public class Ghost {
         isEdible = true;  // Once eaten, it should no longer be edible
     }
 }
+

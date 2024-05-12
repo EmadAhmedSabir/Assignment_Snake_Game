@@ -205,6 +205,7 @@ class Snake implements Drawable, Movable {
         return false;
     }
 
+
     void switchHeading(MotionEvent motionEvent) {
         if (motionEvent.getX() >= halfWayPoint) {
             clockwise();

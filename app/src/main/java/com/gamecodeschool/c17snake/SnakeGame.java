@@ -136,7 +136,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
         mSnake.reset(size.x, size.y); // Call reset() before accessing getHeadPosition()
 
         // Pass the snake's head position to the Ghost constructor
-        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false);
+        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false);
 
         // Load the background image
         try {
@@ -147,14 +147,13 @@ public class SnakeGame extends SurfaceView implements Runnable {
             e.printStackTrace();
         }
         ghosts = new ArrayList<>();
-        ghosts.add(new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
-        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
-        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
+        ghosts.add(new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
+        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
+        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
         //add your guy's ghost here to the array list
 
 
 
-        mGhost.resetPosition2();
 
 
         spawnRandomGhost(); // Initial spawn
@@ -165,10 +164,10 @@ public class SnakeGame extends SurfaceView implements Runnable {
         int ghostType = random.nextInt(5); // Generate a random number between 0 and 4
         switch (ghostType) {
             case 0:
-                mGhost = new Ghost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+                mGhost = new Ghost(mContext, blockSize, speed, gameBounds, false);
                 break;
             case 1:
-                mGhost = new SamGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+                mGhost = new SamGhost(mContext, blockSize, speed, gameBounds,false);
                 break;
             /*case 2:
                 mGhost = new JacobGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
@@ -180,7 +179,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
                 mGhost = new EvaGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
                 break;*/
             default:
-                mGhost = new Ghost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false); // Fallback
+                mGhost = new Ghost(mContext, blockSize, speed, gameBounds, false); // Fallback
         }
         ghosts.clear();
         ghosts.add(mGhost);
@@ -251,6 +250,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
     public void update() {
         mSnake.move();
         eatApple();
+        eatGhost();
         snakeDeath();
         for (Ghost ghost : ghosts) {
             ghost.update();
@@ -262,30 +262,40 @@ public class SnakeGame extends SurfaceView implements Runnable {
     private void eatApple() {
         int newColor = Color.BLUE;
         if (mSnake.checkDinner(mApple.getLocation())) {
-            // Spawn a new apple with the specified color
-            mApple.spawn(newColor);
-
-            // Increase the score
-            mScore++;
+            mApple.spawn(newColor); // Spawn a new apple
+            mScore++;              // Increase the score
             updateHighScore();
-            mSP.play(mEat_ID, 1, 1, 0, 0, 1);
+            mSP.play(mEat_ID, 1, 1, 0, 0, 1); // Play eating sound
             updateScoreDisplay();
 
-
-            // Play the eating sound effect
-            mSP.play(mEat_ID, 1, 1, 0, 0, 1);
-
-
-            mGhost.setIsEdible(true);
-            mGhost.onAppleEaten();
+            mGhost.setIsEdible(true);        // Make the ghost edible
+            mGhost.onAppleEaten();           // Trigger any special behavior or animations
 
             if (shouldSpawnNewGhost()) {
                 spawnRandomGhost();
             }
-
-
         }
     }
+
+
+    private void eatGhost() {
+        if (mGhost.isEdible() && mSnake.checkDinner(mGhost.getGhostPosition())) {
+            int newColor = Color.BLUE;
+            mApple.spawn(newColor);  // This might be unnecessary here unless you want to respawn the apple whenever a ghost is eaten
+
+            mScore++;               // Increase the score
+            updateHighScore();
+            mSP.play(mEat_ID, 1, 1, 0, 0, 1); // Play eating sound
+            updateScoreDisplay();
+
+            mGhost.eat();           // Method to set ghost as eaten which might also make it non-edible and initiate other changes
+
+            if (shouldSpawnNewGhost()) {
+                spawnRandomGhost();
+            }
+        }
+    }
+
 
     private void updateHighScore() {
         if (mHighScore < mScore) {
@@ -319,24 +329,25 @@ public class SnakeGame extends SurfaceView implements Runnable {
             // Draw the "Tap to Start" text
             drawTapToStartText(mCanvas);
         }
-        else if(mGhost.detectCollision(mSnake.getHeadBounds())){
-            mSP.play(mCrashID, 1, 1, 0, 0, 1);
-            if (SnakeActivity_btnPauseOrResume != null) {
-                SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);
-            }
-            mPaused = true;
-            mScore = 0;
+        else if (mGhost.detectCollision(mSnake.getHeadBounds()) && !mGhost.isEdible()) {
+            mSP.play(mCrashID, 1, 1, 0, 0, 1);  // Play the crash sound effect
 
-            // Update the score TextView
+            if (SnakeActivity_btnPauseOrResume != null) {
+                SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);  // Make pause/resume button invisible
+            }
+
+            mPaused = true;  // Pause the game
+            mScore = 0;  // Reset the score
+
+            // Update the score TextView to reflect the reset
             mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
 
-            // Reset the ghost position to the top left corner
+            // Reset the ghost's position to a defined start position, such as the top left corner
             mGhost.resetPosition();
 
-            // Draw the "Tap to Start" text
+            // Display the "Tap to Start" text to indicate the game can be restarted
             drawTapToStartText(mCanvas);
         }
-
 
 
 

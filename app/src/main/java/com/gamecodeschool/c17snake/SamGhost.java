@@ -12,11 +12,11 @@ import androidx.annotation.DrawableRes;
 public class SamGhost extends Ghost {
 
     private Bitmap[] samGhostImages;
-    private Bitmap edibleGhostImage;
+    private Bitmap[] edibleGhostImage;
     private int currentFrameIndex; // Index of the current frame in the animation sequence
 
-    public SamGhost(Context context, int size, int speed, Rect gameBounds, Point snakePosition, Boolean isEdible) {
-        super(context, size, speed, gameBounds, snakePosition, isEdible);
+    public SamGhost(Context context, int size, int speed, Rect gameBounds, Boolean isEdible) {
+        super(context, size, speed, gameBounds, isEdible);
         this.currentFrameIndex = 0;
         // Initialize the non-edible animation frames
         samGhostImages = new Bitmap[] {
@@ -24,7 +24,10 @@ public class SamGhost extends Ghost {
                 BitmapFactory.decodeResource(context.getResources(), R.drawable.sam2)
         };
         // Initialize the edible image
-        edibleGhostImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.blue);
+        edibleGhostImage= new Bitmap[]{
+                BitmapFactory.decodeResource(context.getResources(), R.drawable.blue),
+                BitmapFactory.decodeResource(context.getResources(), R.drawable.blue2)
+        };
     }
 
     @Override
@@ -38,7 +41,21 @@ public class SamGhost extends Ghost {
             canvas.drawBitmap(samGhostImages[currentFrameIndex], position.x, position.y, paint);
         } else {
             // Draw the single blue ghost image when edible
-            canvas.drawBitmap(edibleGhostImage, position.x, position.y, paint);
+            canvas.drawBitmap(edibleGhostImage[currentFrameIndex], position.x, position.y, paint);
         }
     }
+
+    @Override
+    public void resetPosition() {
+        position.x = 150;
+        position.y = 150;
+        downMovementCount = 28;
+        currentFrameIndex = 0; // Reset animation frame
+        isEdible = false; // Ensure the ghost starts as not edible
+        maxDownMovementCount = 28;
+    }
+
+
 }
+
+
