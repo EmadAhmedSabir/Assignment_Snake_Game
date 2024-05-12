@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,82 +8,96 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:id="@+id/view1"
         android:layout_height="wrap_content"
-        android:background="#3A5E7F"
-        android:orientation="vertical">
+        tools:ignore="UselessParent">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:background="#3A5E7F" />
 
-        <RelativeLayout
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#3455C5"
-            android:backgroundTint="#3455C5"
-            android:foregroundTint="#3455C5">
+            android:background="#3A5E7F"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/txtScore"
-                android:layout_width="wrap_content"
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:background="#3A5E7F" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="78dp"
-                android:text="Score: 0"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:background="#3455C5"
+                android:backgroundTint="#3455C5"
+                android:foregroundTint="#3455C5">
 
-            <TextView
-                android:id="@+id/txtHighScore"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/txtScore"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="5dp"
-                android:text="High Score: 0"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/txtScore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="78dp"
+                    android:text="Score: 0"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/btnPauseOrResume"
-                android:layout_width="120dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="10dp"
-                android:background="@color/black"
-                android:gravity="center"
-                android:minHeight="70dp"
-                android:text="Pause"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+                <TextView
+                    android:id="@+id/txtHighScore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/txtScore"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="5dp"
+                    android:text="High Score: 0"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginTop="15dp"
-                android:layout_marginEnd="10dp"
-                android:gravity="center"
-                android:minHeight="70dp"
-                android:text="Developed by\n1) Emad Sabir\n2) Samantha\n3) Jacob\n 4) Eva"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/btnPauseOrResume"
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@color/black"
+                    android:gravity="center"
+                    android:minHeight="70dp"
+                    android:text="Pause"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
-        </RelativeLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginEnd="10dp"
+                    android:gravity="center"
+                    android:minHeight="70dp"
+                    android:text="Developed by\n1) Emad Sabir\n2) Samantha\n3) Jacob\n 4) Eva"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/idSnakeGameView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical" />
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/idSnakeGameView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical" />
 
-</LinearLayout>
+
+
+</RelativeLayout>

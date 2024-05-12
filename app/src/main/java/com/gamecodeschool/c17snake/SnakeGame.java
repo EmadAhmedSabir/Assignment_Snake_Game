@@ -17,13 +17,17 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.TextView;
+
+import com.gamecodeschool.c17snake.activities.GameActivity;
+import com.gamecodeschool.c17snake.activities.TapToPlayActivity;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import java.io.IOException;
 
-class SnakeGame extends SurfaceView implements Runnable {
+public class SnakeGame extends SurfaceView implements Runnable {
 
     // Objects for the game loop/thread
     private static Thread mThread = null;
@@ -41,7 +45,6 @@ class SnakeGame extends SurfaceView implements Runnable {
     // The size in segments of the playable area
     private final int NUM_BLOCKS_WIDE = 15;
     private final int mNumBlocksHigh;
-    private int speed = 30;
     private final int blockSize;
 
     // How many points does the player have
@@ -59,6 +62,7 @@ class SnakeGame extends SurfaceView implements Runnable {
     private Ghost mGhost;
 
     private final Context mContext;
+    private final int speed = 30;
 
     TextView SnakeActivity_btnPauseOrResume;
 
@@ -70,10 +74,11 @@ class SnakeGame extends SurfaceView implements Runnable {
 
     private List<Ghost> ghosts;
     private final Rect gameBounds;
+    private int timeSMile;
 
-    public SnakeGame(Context context, Point size, TextView txtScore, TextView txtHighScore) {
+    public SnakeGame(Context context,int timeSMile, Point size, TextView txtScore, TextView txtHighScore) {
         super(context);
-
+        this.timeSMile = timeSMile;
         this.mContext = context;
         mTxtScore = txtScore;
         mTxtHighScore = txtHighScore;
@@ -98,7 +103,7 @@ class SnakeGame extends SurfaceView implements Runnable {
                 .build();
 
         mSP = new SoundPool.Builder()
-                .setMaxStreams(5)
+                .setMaxStreams(10)
                 .setAudioAttributes(audioAttributes)
                 .build();
         try {
@@ -144,7 +149,13 @@ class SnakeGame extends SurfaceView implements Runnable {
         ghosts = new ArrayList<>();
         ghosts.add(new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
         ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
+        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), mSnake.getHeadPosition(), false));
         //add your guy's ghost here to the array list
+
+
+
+        mGhost.resetPosition2();
+
 
         spawnRandomGhost(); // Initial spawn
     }
@@ -226,7 +237,7 @@ class SnakeGame extends SurfaceView implements Runnable {
 
     public boolean updateRequired() {
         final long TARGET_FPS = 10;
-        final long MILLIS_PER_SECOND = 1000;
+        final long MILLIS_PER_SECOND = timeSMile;
 
         if (mNextFrameTime <= System.currentTimeMillis()) {
             mNextFrameTime = System.currentTimeMillis()
@@ -291,7 +302,7 @@ class SnakeGame extends SurfaceView implements Runnable {
 
 
     private void snakeDeath() {
-        if (mSnake.detectDeath() || mGhost.detectCollision(mSnake.getHeadBounds())) {
+        if (mSnake.detectDeath()) {
             mSP.play(mCrashID, 1, 1, 0, 0, 1);
             if (SnakeActivity_btnPauseOrResume != null) {
                 SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);
@@ -308,6 +319,28 @@ class SnakeGame extends SurfaceView implements Runnable {
             // Draw the "Tap to Start" text
             drawTapToStartText(mCanvas);
         }
+        else if(mGhost.detectCollision(mSnake.getHeadBounds())){
+            mSP.play(mCrashID, 1, 1, 0, 0, 1);
+            if (SnakeActivity_btnPauseOrResume != null) {
+                SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);
+            }
+            mPaused = true;
+            mScore = 0;
+
+            // Update the score TextView
+            mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
+
+            // Reset the ghost position to the top left corner
+            mGhost.resetPosition();
+
+            // Draw the "Tap to Start" text
+            drawTapToStartText(mCanvas);
+        }
+
+
+
+
+
     }
 
     private void drawTapToStartText(Canvas canvas) {
@@ -332,7 +365,7 @@ class SnakeGame extends SurfaceView implements Runnable {
                 mPaused = false;
 
                 StartNewGame.newGame(mSnake, mScore, playOrNot, NUM_BLOCKS_WIDE, mNumBlocksHigh, mApple, mNextFrameTime);
-                SnakeActivity_btnPauseOrResume = SnakeActivity.btnPauseOrResume;
+                SnakeActivity_btnPauseOrResume = GameActivity.btnPauseOrResume;
 
                 if (SnakeActivity_btnPauseOrResume != null) {
                     SnakeActivity_btnPauseOrResume.setVisibility(VISIBLE);

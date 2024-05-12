@@ -135,6 +135,20 @@ public class Ghost {
         isEdible = false; // Ensure the ghost starts as not edible
     }
 
+
+    public void resetPosition2() {
+        position.x = 400;
+        position.y = 400;
+        isFollowing = true;
+        downMovementCount = 0;
+        hasExitedBox = false;
+        currentFrameIndex = 0; // Reset animation frame
+        isEdible = true; // Ensure the ghost starts as not edible
+    }
+
+
+
+
     public boolean detectCollision(Rect snakeRect) {
         // Detect collision based on bounding rectangles only
         return getBounds().intersect(snakeRect);
@@ -147,6 +161,6 @@ public class Ghost {
     }
     public void eat() {
         isEaten = true;  // Set the ghost as eaten
-        isEdible = false;  // Once eaten, it should no longer be edible
+        isEdible = true;  // Once eaten, it should no longer be edible
     }
 }
