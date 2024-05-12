@@ -31,9 +31,9 @@ class Snake implements Drawable, Movable {
     private Bitmap bodyBitmap;
     private final int[] animationSequence = {R.drawable.pacman1, R.drawable.pacman2, R.drawable.pacman3};
     private int currentAnimationFrame = 0; // Index of the current frame in the animation sequence
-    private Context context; // Context reference for resource loading
+    private final Context context; // Context reference for resource loading
     private static final long ANIMATION_DELAY_MS = 400; //delay? doesn't do anything
-    private Handler animationHandler;
+    private final Handler animationHandler;
 
     Snake(Context context, Point moveRange, int segmentSize) {
         segmentLocations = new ArrayList<>();

@@ -164,18 +164,15 @@ public class SnakeGame extends SurfaceView implements Runnable {
         int ghostType = random.nextInt(5); // Generate a random number between 0 and 4
         switch (ghostType) {
             case 0:
-                mGhost = new Ghost(mContext, blockSize, speed, gameBounds, false);
-                break;
-            case 1:
                 mGhost = new SamGhost(mContext, blockSize, speed, gameBounds,false);
                 break;
-            case 2:
+            case 1:
                 mGhost = new JacobsGhost(mContext, blockSize, speed, gameBounds, false);
                 break;
-            case 3:
+            case 2:
                 mGhost = new EmadsGhost(mContext, blockSize, speed, gameBounds, false);
                 break;
-            case 4:
+            case 3:
                 mGhost = new EvasGhost(mContext, blockSize, speed, gameBounds, false);
                 break;
         }

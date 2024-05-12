@@ -8,9 +8,11 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Color;
+import android.os.Handler;
 
 
 public class Ghost {
+
     private final int SIZE;
     private int SPEED;
     protected Point position;
@@ -24,6 +26,7 @@ public class Ghost {
     protected static final long FRAME_UPDATE_TIME = 500;
     protected boolean isEaten;
     protected int maxDownMovementCount;
+    private Handler handler = new Handler();
 
     public boolean isEaten() {
         return isEaten;
@@ -49,9 +52,17 @@ public class Ghost {
     public boolean isEdible(){
         return isEdible;
     }
+
     public void setIsEdible(boolean edible) {
         isEdible = edible;
+        if (edible) {
+            // Reset the isEdible to false after 5000 milliseconds (5 seconds)
+            handler.postDelayed(() -> isEdible = false, 5000);
+
+        }
     }
+
+
 
     public void draw(Canvas canvas) {
         if (isEdible) {

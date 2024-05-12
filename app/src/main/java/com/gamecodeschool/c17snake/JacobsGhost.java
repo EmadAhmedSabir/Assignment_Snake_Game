@@ -4,15 +4,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.Rect;
-import androidx.annotation.DrawableRes;
 
 public class JacobsGhost extends Ghost {
 
-    private Bitmap[] jacobsGhostImages;
-    private Bitmap[] edibleGhostImage;
+    private final Bitmap[] jacobsGhostImages;
+    private final Bitmap[] edibleGhostImage;
     private int currentFrameIndex; // Index of the current frame in the animation sequence
 
     public JacobsGhost(Context context, int size, int speed, Rect gameBounds, Boolean isEdible) {
