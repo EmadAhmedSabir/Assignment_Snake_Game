@@ -169,10 +169,10 @@ public class SnakeGame extends SurfaceView implements Runnable {
             case 1:
                 mGhost = new SamGhost(mContext, blockSize, speed, gameBounds,false);
                 break;
-            /*case 2:
-                mGhost = new JacobGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
+            case 2:
+                mGhost = new JacobsGhost(mContext, blockSize, speed, gameBounds, false);
                 break;
-            case 3:
+           /* case 3:
                 mGhost = new EmadGhost(mContext, blockSize, speed, gameBounds, mSnake.getHeadPosition(), false);
                 break;
             case 4:
