@@ -67,7 +67,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
     TextView SnakeActivity_btnPauseOrResume;
 
     private TextView mTxtScore;
-    private TextView mTxtHighScore;
+    private final TextView mTxtHighScore;
 
     // Background image
     private Bitmap mBackgroundBitmap;
@@ -361,7 +361,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
         textPaint.setTextAlign(Paint.Align.CENTER);
 
         String tapToStartText = "Tap to Start";
-        float textWidth = textPaint.measureText(tapToStartText);
+        //float textWidth = textPaint.measureText(tapToStartText);
         float canvasWidth = canvas.getWidth();
         float canvasHeight = canvas.getHeight();
 
