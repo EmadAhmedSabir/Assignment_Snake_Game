@@ -323,8 +323,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
 
             // Draw the "Tap to Start" text
             drawTapToStartText(mCanvas);
-        }
-        else if (mGhost.detectCollision(mSnake.getHeadBounds()) && !mGhost.isEdible()) {
+        } else if (mGhost.detectCollision(mSnake.getHeadBounds()) && !mGhost.isEdible()) {
             mSP.play(mCrashID, 1, 1, 0, 0, 1);  // Play the crash sound effect
 
             if (SnakeActivity_btnPauseOrResume != null) {
@@ -332,10 +331,6 @@ public class SnakeGame extends SurfaceView implements Runnable {
             }
 
             mPaused = true;  // Pause the game
-            mScore = 0;  // Reset the score
-
-            // Update the score TextView to reflect the reset
-            mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
 
             // Reset the ghost's position to a defined start position, such as the top left corner
             mGhost.resetPosition();
@@ -343,11 +338,8 @@ public class SnakeGame extends SurfaceView implements Runnable {
             // Display the "Tap to Start" text to indicate the game can be restarted
             drawTapToStartText(mCanvas);
         }
-
-
-
-
     }
+
 
     private void drawTapToStartText(Canvas canvas) {
         Paint textPaint = new Paint();
