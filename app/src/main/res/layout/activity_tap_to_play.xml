@@ -22,6 +22,17 @@
 
 
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:src="@drawable/img"
+        android:layout_marginStart="10dp"
+        android:layout_above="@id/tapToPlayBtn"
+        android:layout_marginEnd="10dp"
+        android:layout_height="200dp"/>
+
+
+
+
 
 
 
