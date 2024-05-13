@@ -19,26 +19,22 @@ import android.view.SurfaceView;
 import android.widget.TextView;
 
 import com.gamecodeschool.c17snake.activities.GameActivity;
-import com.gamecodeschool.c17snake.activities.TapToPlayActivity;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import java.io.IOException;
 
 public class SnakeGame extends SurfaceView implements Runnable {
 
     // Objects for the game loop/thread
     private static Thread mThread = null;
-    // Control pausing between updates
     private long mNextFrameTime;
-    // Is the game currently playing and or paused?
     private static volatile boolean mPlaying = false;
     private volatile boolean mPaused = true;
 
     // for playing sound effects
-    private final SoundPool mSP;
+    private SoundPool mSP;
     private int mEat_ID = -1;
     private int mCrashID = -1;
 
@@ -76,7 +72,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
     private final Rect gameBounds;
     private int timeSMile;
 
-    public SnakeGame(Context context,int timeSMile, Point size, TextView txtScore, TextView txtHighScore) {
+    public SnakeGame(Context context, int timeSMile, Point size, TextView txtScore, TextView txtHighScore) {
         super(context);
         this.timeSMile = timeSMile;
         this.mContext = context;
@@ -90,13 +86,39 @@ public class SnakeGame extends SurfaceView implements Runnable {
         this.mNumBlocksHigh = size.y / this.blockSize;
 
         // Adjust the game area to be slightly smaller than the actual size of the game area
-        int adjustedLeft = (int)(NUM_BLOCKS_WIDE * 0.10);
-        int adjustedTop = (int)(mNumBlocksHigh * 0.17);
-        int adjustedRight = (int)(NUM_BLOCKS_WIDE * 0.945);
-        int adjustedBottom = (int)(mNumBlocksHigh * 0.95);
+        int adjustedLeft = (int) (NUM_BLOCKS_WIDE * 0.10);
+        int adjustedTop = (int) (mNumBlocksHigh * 0.17);
+        int adjustedRight = (int) (NUM_BLOCKS_WIDE * 0.945);
+        int adjustedBottom = (int) (mNumBlocksHigh * 0.95);
         Point adjustedMoveRange = new Point(adjustedRight - adjustedLeft, adjustedBottom - adjustedTop);
 
         // Initialize the SoundPool
+        initializeSoundPool();
+
+        // Initialize the drawing objects
+        mSurfaceHolder = getHolder();
+        mPaint = new Paint();
+
+        // Initialize game objects
+        mApple = new Apple(context, adjustedMoveRange, blockSize);
+        mSnake = new Snake(context, adjustedMoveRange, blockSize);
+        mSnake.reset(size.x, size.y); // Call reset() before accessing getHeadPosition()
+
+        // Pass the snake's head position to the Ghost constructor
+        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false);
+
+        // Load the background image
+        loadBackgroundImage(size.x, size.y);
+
+        ghosts = new ArrayList<>();
+        ghosts.add(new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
+        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
+        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
+
+        spawnRandomGhost(); // Initial spawn
+    }
+
+    private void initializeSoundPool() {
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -107,7 +129,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
                 .setAudioAttributes(audioAttributes)
                 .build();
         try {
-            AssetManager assetManager = context.getAssets();
+            AssetManager assetManager = mContext.getAssets();
             AssetFileDescriptor descriptor;
 
             // Prepare the sounds in memory
@@ -120,76 +142,16 @@ public class SnakeGame extends SurfaceView implements Runnable {
         } catch (IOException e) {
             // Error
         }
+    }
 
-        // Initialize the drawing objects
-        mSurfaceHolder = getHolder();
-        mPaint = new Paint();
-
-        // Initialize game objects
-        mApple = new Apple(context,
-                adjustedMoveRange,
-                blockSize);
-
-        mSnake = new Snake(context,
-                adjustedMoveRange,
-                blockSize);
-        mSnake.reset(size.x, size.y); // Call reset() before accessing getHeadPosition()
-
-        // Pass the snake's head position to the Ghost constructor
-        mGhost = new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false);
-
-        // Load the background image
+    private void loadBackgroundImage(int width, int height) {
         try {
-            Bitmap originalBitmap = BitmapFactory.decodeStream(context.getAssets().open("background.png"));
-            mBackgroundBitmap = getScaledBitmap(originalBitmap, size.x, size.y);
+            Bitmap originalBitmap = BitmapFactory.decodeStream(mContext.getAssets().open("background.png"));
+            mBackgroundBitmap = getScaledBitmap(originalBitmap, width, height);
         } catch (IOException e) {
-            // Handle the exception
             e.printStackTrace();
         }
-        ghosts = new ArrayList<>();
-        ghosts.add(new Ghost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
-        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
-        ghosts.add(new SamGhost(context, blockSize, speed, new Rect(0, 0, size.x, size.y), false));
-        //add your guy's ghost here to the array list
-
-
-
-
-
-        spawnRandomGhost(); // Initial spawn
     }
-
-    private void spawnRandomGhost() {
-        Random random = new Random();
-        int ghostType = random.nextInt(5); // Generate a random number between 0 and 4
-        switch (ghostType) {
-            case 0:
-                mGhost = new SamGhost(mContext, blockSize, speed, gameBounds,false);
-                break;
-            case 1:
-                mGhost = new JacobsGhost(mContext, blockSize, speed, gameBounds, false);
-                break;
-            case 2:
-                mGhost = new EmadsGhost(mContext, blockSize, speed, gameBounds, false);
-                break;
-            case 3:
-                mGhost = new EvasGhost(mContext, blockSize, speed, gameBounds, false);
-                break;
-        }
-        ghosts.clear();
-        ghosts.add(mGhost);
-    }
-
-
-    private void checkGhostEaten() {
-        if (mGhost.isEdible() && mGhost.detectCollision(mSnake.getHeadBounds())) {
-            mGhost.eat();
-            mScore += 10;
-            updateScoreDisplay();
-            spawnRandomGhost();
-        }
-    }
-
 
     private Bitmap getScaledBitmap(Bitmap originalBitmap, int newWidth, int newHeight) {
         float originalAspectRatio = (float) originalBitmap.getWidth() / originalBitmap.getHeight();
@@ -219,7 +181,6 @@ public class SnakeGame extends SurfaceView implements Runnable {
     public void run() {
         while (mPlaying) {
             if (!mPaused) {
-                // Update 10 times a second
                 if (updateRequired()) {
                     update();
                 }
@@ -234,8 +195,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
         final long MILLIS_PER_SECOND = timeSMile;
 
         if (mNextFrameTime <= System.currentTimeMillis()) {
-            mNextFrameTime = System.currentTimeMillis()
-                    + MILLIS_PER_SECOND / TARGET_FPS;
+            mNextFrameTime = System.currentTimeMillis() + MILLIS_PER_SECOND / TARGET_FPS;
             return true;
         }
 
@@ -246,7 +206,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
         mSnake.move();
         eatApple();
         eatGhost();
-        snakeDeath();
+        handleSnakeDeath();
         for (Ghost ghost : ghosts) {
             ghost.update();
         }
@@ -272,7 +232,6 @@ public class SnakeGame extends SurfaceView implements Runnable {
         }
     }
 
-
     private void eatGhost() {
         if (mGhost.isEdible() && mSnake.checkDinner(mGhost.getGhostPosition())) {
             int newColor = Color.BLUE;
@@ -291,55 +250,56 @@ public class SnakeGame extends SurfaceView implements Runnable {
         }
     }
 
-
     private void updateHighScore() {
         if (mHighScore < mScore) {
             mHighScore = mScore;
         }
     }
+
     private void updateScoreDisplay() {
         mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
         mTxtHighScore.post(() -> mTxtHighScore.setText("High Score: " + mHighScore));
     }
 
-
-
-
-
-    private void snakeDeath() {
+    private void handleSnakeDeath() {
         if (mSnake.detectDeath()) {
-            mSP.play(mCrashID, 1, 1, 0, 0, 1);
-            if (SnakeActivity_btnPauseOrResume != null) {
-                SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);
-            }
-            mPaused = true;
-            mScore = 0;
-
-            // Update the score TextView
-            mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
-
-            // Reset the ghost position to the top left corner
-            mGhost.resetPosition();
-
-            // Draw the "Tap to Start" text
+            playDeathSound();
+            hideResumeButton();
+            pauseGame();
+            resetScore();
+            resetGhostPosition();
             drawTapToStartText(mCanvas);
         } else if (mGhost.detectCollision(mSnake.getHeadBounds()) && !mGhost.isEdible()) {
-            mSP.play(mCrashID, 1, 1, 0, 0, 1);  // Play the crash sound effect
-
-            if (SnakeActivity_btnPauseOrResume != null) {
-                SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);  // Make pause/resume button invisible
-            }
-
-            mPaused = true;  // Pause the game
-
-            // Reset the ghost's position to a defined start position, such as the top left corner
-            mGhost.resetPosition();
-
-            // Display the "Tap to Start" text to indicate the game can be restarted
+            playDeathSound();
+            hideResumeButton();
+            pauseGame();
+            resetGhostPosition();
             drawTapToStartText(mCanvas);
         }
     }
 
+    private void playDeathSound() {
+        mSP.play(mCrashID, 1, 1, 0, 0, 1);
+    }
+
+    private void hideResumeButton() {
+        if (SnakeActivity_btnPauseOrResume != null) {
+            SnakeActivity_btnPauseOrResume.setVisibility(INVISIBLE);
+        }
+    }
+
+    private void pauseGame() {
+        mPaused = true;
+    }
+
+    private void resetScore() {
+        mScore = 0;
+        mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
+    }
+
+    private void resetGhostPosition() {
+        mGhost.resetPosition();
+    }
 
     private void drawTapToStartText(Canvas canvas) {
         Paint textPaint = new Paint();
@@ -348,38 +308,17 @@ public class SnakeGame extends SurfaceView implements Runnable {
         textPaint.setTextAlign(Paint.Align.CENTER);
 
         String tapToStartText = "Tap to Start";
-        //float textWidth = textPaint.measureText(tapToStartText);
         float canvasWidth = canvas.getWidth();
         float canvasHeight = canvas.getHeight();
 
         canvas.drawText(tapToStartText, canvasWidth / 2, canvasHeight / 2 + (textPaint.descent() + textPaint.ascent()) / 2, textPaint);
     }
-
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
         if ((motionEvent.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
             if (mPaused) {
-                mPaused = false;
-
-                StartNewGame.newGame(mSnake, mScore, playOrNot, NUM_BLOCKS_WIDE, mNumBlocksHigh, mApple, mNextFrameTime);
-                SnakeActivity_btnPauseOrResume = GameActivity.btnPauseOrResume;
-
-                if (SnakeActivity_btnPauseOrResume != null) {
-                    SnakeActivity_btnPauseOrResume.setVisibility(VISIBLE);
-
-                    SnakeActivity_btnPauseOrResume.setOnClickListener(v -> {
-                        playOrNot = !playOrNot;
-                        if (playOrNot) {
-                            pause();
-                            SnakeActivity_btnPauseOrResume.setText("Resume");
-                        } else {
-                            resume();
-                            SnakeActivity_btnPauseOrResume.setText("Pause");
-                        }
-                    });
-                }
-                // Don't want to process snake direction for this tap
+                handleGameRestart(motionEvent);
                 return true;
             }
 
@@ -387,6 +326,34 @@ public class SnakeGame extends SurfaceView implements Runnable {
             mSnake.switchHeading(motionEvent);
         }
         return true;
+    }
+
+    private void handleGameRestart(MotionEvent motionEvent) {
+        mPaused = false;
+
+        StartNewGame.newGame(mSnake, mScore, playOrNot, NUM_BLOCKS_WIDE, mNumBlocksHigh, mApple, mNextFrameTime);
+        SnakeActivity_btnPauseOrResume = GameActivity.btnPauseOrResume;
+
+        if (SnakeActivity_btnPauseOrResume != null) {
+            SnakeActivity_btnPauseOrResume.setVisibility(VISIBLE);
+
+            SnakeActivity_btnPauseOrResume.setOnClickListener(v -> {
+                playOrNot = !playOrNot;
+                if (playOrNot) {
+                    pauseGame();
+                    SnakeActivity_btnPauseOrResume.setText("Resume");
+                } else {
+                    resumeGame();
+                    SnakeActivity_btnPauseOrResume.setText("Pause");
+                }
+            });
+        }
+    }
+
+    private void resumeGame() {
+        mPlaying = true;
+        mThread = new Thread(this);
+        mThread.start();
     }
 
     // Draw the game objects on the canvas
@@ -429,6 +396,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
         mThread = new Thread(this);
         mThread.start();
     }
+
     private void checkCollisions() {
         if (mGhost.detectCollision(mSnake.getHeadBounds())) {
             if (mGhost.isEdible()) {
@@ -436,9 +404,38 @@ public class SnakeGame extends SurfaceView implements Runnable {
                 spawnRandomGhost();
                 mScore++;
             } else {
-                snakeDeath();
+                handleSnakeDeath();
             }
         }
     }
 
+    private void spawnRandomGhost() {
+        Random random = new Random();
+        int ghostType = random.nextInt(5); // Generate a random number between 0 and 4
+        switch (ghostType) {
+            case 0:
+                mGhost = new SamGhost(mContext, blockSize, speed, gameBounds, false);
+                break;
+            case 1:
+                mGhost = new JacobsGhost(mContext, blockSize, speed, gameBounds, false);
+                break;
+            case 2:
+                mGhost = new EmadsGhost(mContext, blockSize, speed, gameBounds, false);
+                break;
+            case 3:
+                mGhost = new EvasGhost(mContext, blockSize, speed, gameBounds, false);
+                break;
+        }
+        ghosts.clear();
+        ghosts.add(mGhost);
+    }
+
+    private void checkGhostEaten() {
+        if (mGhost.isEdible() && mGhost.detectCollision(mSnake.getHeadBounds())) {
+            mGhost.eat();
+            mScore += 10;
+            updateScoreDisplay();
+            spawnRandomGhost();
+        }
+    }
 }
