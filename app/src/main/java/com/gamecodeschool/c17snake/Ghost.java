@@ -14,7 +14,6 @@ import android.os.Looper;
 
 
 public class Ghost {
-
     private final int SIZE;
     private int SPEED;
     protected Point position;
@@ -29,15 +28,17 @@ public class Ghost {
     protected static final long FRAME_UPDATE_TIME = 500;
     protected boolean isEaten;
     protected int maxDownMovementCount;
-
     public boolean isEaten() {
         return isEaten;
     }
 
-
+    private int SPEED_X;
+    private int SPEED_Y;
     public Ghost(Context context, int size, int speed, Rect gameBounds, Boolean isEdible) {
         SIZE = size;
         SPEED = speed;
+        SPEED_X = 4;
+        SPEED_Y = 4;
         bounds = gameBounds;
         position = new Point();
         paint = new Paint();
@@ -107,6 +108,18 @@ public class Ghost {
 
             // Move the ghost horizontally
             position.x += SPEED;
+            if (position.x <= bounds.left || position.x + SIZE >= bounds.right) {
+                SPEED_X = -SPEED_X; // Reverse the horizontal direction
+            }
+
+            // Move the ghost vertically
+            position.y += SPEED;
+
+            // Reverse the direction if the ghost reaches the screen boundaries vertically
+            if (position.y <= bounds.top || position.y + SIZE >= bounds.bottom) {
+                SPEED_Y = -SPEED_Y; // Reverse the vertical direction
+            }
+
 
             // After moving downwards the required number of times, adjust the direction horizontally
             if (downMovementCount == maxDownMovementCount) {
@@ -146,8 +159,6 @@ public class Ghost {
         currentFrameIndex = 0; // Reset animation frame
         isEdible = false; // Ensure the ghost starts as not edible
     }
-
-
 
     public boolean detectCollision(Rect snakeRect) {
         // Detect collision based on bounding rectangles only

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Random;
 
 public class SnakeGame extends SurfaceView implements Runnable {
-
+    private static SnakeGame instance;
     // Objects for the game loop/thread
     private static Thread mThread = null;
     private long mNextFrameTime;
@@ -79,7 +79,6 @@ public class SnakeGame extends SurfaceView implements Runnable {
         mTxtScore = txtScore;
         mTxtHighScore = txtHighScore;
         this.gameBounds = new Rect(0, 0, size.x, size.y);
-
         // Work out how many pixels each block is
         this.blockSize = size.x / NUM_BLOCKS_WIDE;
         // How many blocks of the same size will fit into the height
@@ -437,5 +436,12 @@ public class SnakeGame extends SurfaceView implements Runnable {
             updateScoreDisplay();
             spawnRandomGhost();
         }
+    }
+   //get instance here for singleton Pattern
+    public static synchronized SnakeGame getInstance(Context context, int timeSMile, Point size, TextView txtScore, TextView txtHighScore) {
+        if (instance == null) {
+            instance = new SnakeGame(context, timeSMile, size, txtScore, txtHighScore);
+        }
+        return instance;
     }
 }
