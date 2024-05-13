@@ -114,7 +114,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
             descriptor = assetManager.openFd("get_apple.ogg");
             mEat_ID = mSP.load(descriptor, 0);
 
-            descriptor = assetManager.openFd("snake_death.ogg");
+            descriptor = assetManager.openFd("game_over.ogg");
             mCrashID = mSP.load(descriptor, 0);
 
         } catch (IOException e) {
@@ -299,7 +299,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
     }
     private void updateScoreDisplay() {
         mTxtScore.post(() -> mTxtScore.setText("Score: " + mScore));
-        mTxtHighScore.post(() -> mTxtHighScore.setText("HiScore: " + mHighScore));
+        mTxtHighScore.post(() -> mTxtHighScore.setText("High Score: " + mHighScore));
     }
 
 
