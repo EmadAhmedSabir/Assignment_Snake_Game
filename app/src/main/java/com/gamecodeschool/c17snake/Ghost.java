@@ -9,6 +9,8 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Color;
 import android.os.Handler;
+import android.os.Looper;
+
 
 
 public class Ghost {
@@ -18,6 +20,7 @@ public class Ghost {
     protected Point position;
     private final Rect bounds;
     protected final Paint paint;
+    private Handler handler;
     protected boolean isEdible;
     protected int downMovementCount;
     private final Bitmap[] edibleGhostImages;
@@ -26,14 +29,13 @@ public class Ghost {
     protected static final long FRAME_UPDATE_TIME = 500;
     protected boolean isEaten;
     protected int maxDownMovementCount;
-    private Handler handler = new Handler();
 
     public boolean isEaten() {
         return isEaten;
     }
 
 
-    public Ghost(Context context, int size, int speed, Rect gameBounds , Boolean isEdible) {
+    public Ghost(Context context, int size, int speed, Rect gameBounds, Boolean isEdible) {
         SIZE = size;
         SPEED = speed;
         bounds = gameBounds;
@@ -48,6 +50,8 @@ public class Ghost {
         };
         lastFrameTime = System.currentTimeMillis();
 
+        // Initialize the handler with the main looper
+        handler = new Handler(Looper.getMainLooper());
     }
     public boolean isEdible(){
         return isEdible;
@@ -57,11 +61,12 @@ public class Ghost {
         isEdible = edible;
         if (edible) {
             // Reset the isEdible to false after 5000 milliseconds (5 seconds)
-            handler.postDelayed(() -> isEdible = false, 5000);
-
+            handler.postDelayed(() -> {
+                isEdible = false;
+                // If there's any UI update or notifications to be sent, it can be safely handled here
+            }, 5000);
         }
     }
-
 
 
     public void draw(Canvas canvas) {
