@@ -114,7 +114,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
             descriptor = assetManager.openFd("get_apple.ogg");
             mEat_ID = mSP.load(descriptor, 0);
 
-            descriptor = assetManager.openFd("game_over.ogg");
+            descriptor = assetManager.openFd("snake_death.ogg");
             mCrashID = mSP.load(descriptor, 0);
 
         } catch (IOException e) {
