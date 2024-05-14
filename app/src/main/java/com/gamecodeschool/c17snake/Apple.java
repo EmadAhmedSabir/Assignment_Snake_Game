@@ -9,21 +9,23 @@ import android.graphics.Point;
 import java.util.Random;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.Color;
 
-class Apple implements Drawable{
+@SuppressWarnings("all")
+
+class Apple implements Drawable {
+    private static Apple instance = null;
 
     private final Point location = new Point();
     private final Point mSpawnRange;
     private int mSize;
 
     private Bitmap mOriginalBitmap;
-
     private Bitmap mBitmapApple;
 
     private final Context context;
     private static final int initialX = -10;
-    public Apple(Context context, Point sr, int s) {
+
+    private Apple(Context context, Point sr, int s) {
         this.context = context;
         mSpawnRange = sr;
         mSize = s;
@@ -33,20 +35,28 @@ class Apple implements Drawable{
         mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, s, s, false);
     }
 
-    void spawn(){
+    public static synchronized Apple getInstance(Context context, Point sr, int s) {
+        if (instance == null) {
+            instance = new Apple(context, sr, s);
+        }
+        return instance;
+    }
+
+    void spawn() {
         Random random = new Random();
         location.x = random.nextInt(mSpawnRange.x - 1) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
     }
-    void spawn(int s){
+
+    void spawn(int s) {
         Random random = new Random();
         location.x = random.nextInt(mSpawnRange.x - 1) + 1;
         location.y = random.nextInt(mSpawnRange.y - 1) + 1;
         mBitmapApple = Bitmap.createScaledBitmap(mOriginalBitmap, mSize, mSize, false);
         changeColor(s);
     }
-    void changeColor(int s){
 
+    void changeColor(int s) {
         Bitmap tempBitmap = Bitmap.createBitmap(mSize, mSize, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(tempBitmap);
         Paint paint = new Paint();
@@ -55,19 +65,15 @@ class Apple implements Drawable{
         paint.setColorFilter(colorFilter);
 
         canvas.drawBitmap(mBitmapApple, 0, 0, paint);
-
         mBitmapApple = tempBitmap;
-
     }
 
-    Point getLocation(){
+    Point getLocation() {
         return location;
     }
+
     @Override
-    public void draw(Canvas canvas, Paint paint){
-        canvas.drawBitmap(mBitmapApple,
-                location.x * mSize, location.y * mSize, paint);
-
+    public void draw(Canvas canvas, Paint paint) {
+        canvas.drawBitmap(mBitmapApple, location.x * mSize, location.y * mSize, paint);
     }
-
 }

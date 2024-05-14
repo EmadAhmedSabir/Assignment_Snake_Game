@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@SuppressWarnings("all")
 public class SnakeGame extends SurfaceView implements Runnable {
     private static SnakeGame instance;
     // Objects for the game loop/thread
@@ -99,7 +100,7 @@ public class SnakeGame extends SurfaceView implements Runnable {
         mPaint = new Paint();
 
         // Initialize game objects
-        mApple = new Apple(context, adjustedMoveRange, blockSize);
+        mApple = Apple.getInstance(context, adjustedMoveRange, blockSize);
         mSnake = new Snake(context, adjustedMoveRange, blockSize);
         mSnake.reset(size.x, size.y); // Call reset() before accessing getHeadPosition()
 
